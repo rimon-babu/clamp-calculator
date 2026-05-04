@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W+ Clamp Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Favicon – inline SVG data URI, no external dependency -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6ff7'/><path d='M31.25 56.25 75 9.375 50 43.75h34.375L25 90.625 50 56.25Z' fill='white'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6ff7'/><path d='M31.25 56.25 75 9.375 50 43.75h34.375L25 90.625 50 56.25Z' fill='white'/></svg>">
+<style>
+/* ─── THEME TOKENS ─────────────────────────────────────────────── */
+:root {
+  --accent: #7c6ff7;
+  --accent2: #a89cff;
+  --accent-dim: rgba(124,111,247,0.12);
+  --green: #4ade80;
+  --red: #f87171;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --radius: 6px;
+  --tr: 0.18s ease;
+}
+[data-theme="dark"] {
+  --bg:#0f0f11; --surface:#17171a; --surface2:#1e1e22; --surface3:#252529;
+  --border:#2e2e34; --border2:#3a3a42;
+  --text:#f0f0f5; --text2:#9898a8; --text3:#5a5a6a;
+  --shadow:0 4px 28px rgba(0,0,0,.5);
+  --tip-bg:#1e1e28; --tip-border:#3a3a52;
+  --code-col:#c8b8ff; --clamp-col:#4ade80;
+}
+[data-theme="light"] {
+  --bg:#f2f2f7; --surface:#ffffff; --surface2:#f0f0f5; --surface3:#e5e5ec;
+  --border:#dddde8; --border2:#c5c5d5;
+  --text:#18182a; --text2:#52526a; --text3:#9898b0;
+  --shadow:0 4px 28px rgba(0,0,0,.1);
+  --tip-bg:#ffffff; --tip-border:#c8c8d8;
+  --code-col:#5a3fcf; --clamp-col:#16a34a;
+}
+
+/* ─── RESET ─────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;transition:background var(--tr),color var(--tr)}
+
+/* ─── THEME TOGGLE ──────────────────────────────────────────────── */
+.theme-toggle{position:relative;width:52px;height:26px;cursor:pointer;flex-shrink:0}
+.theme-toggle input{opacity:0;width:0;height:0;position:absolute}
+.theme-track{
+  position:absolute;inset:0;border-radius:13px;
+  background:var(--surface3);border:1px solid var(--border2);
+  transition:background var(--tr),border-color var(--tr);
+  display:flex;align-items:center;justify-content:space-between;padding:0 6px;
+  font-size:14px;
+  padding-bottom: 2px;
+}
+.theme-track::before{content:'☀️'}
+.theme-track::after{content:'🌙'}
+.theme-thumb{
+  position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:var(--accent);transition:left var(--tr);
+  box-shadow:0 1px 5px rgba(0,0,0,.35);
+}
+[data-theme="light"] .theme-thumb{left:29px}
+
+/* ─── HEADER ────────────────────────────────────────────────────── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);
+  position:sticky;top:0;z-index:100;
+  transition:background var(--tr),border-color var(--tr);box-shadow:var(--shadow);
+  gap:0;
+  overflow: hidden;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:.03em;color:var(--text)}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-actions{display:flex;gap:6px;flex-direction: row;flex-wrap: wrap;}
+
+/* ─── BUTTONS ───────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:5px;padding:6px 12px;
+  border-radius:var(--radius);border:1px solid var(--border2);
+  background:var(--surface2);color:var(--text2);
+  font-family:var(--sans);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .14s;white-space:nowrap;
+}
+.btn:hover{background:var(--surface3);color:var(--text)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.btn-danger{color:var(--red);border-color:transparent;background:transparent}
+.btn-danger:hover{background:rgba(248,113,113,.1)}
+.btn-clamp{background:var(--accent-dim);border-color:rgba(124,111,247,.3);color:var(--accent2)}
+.btn-clamp:hover{background:rgba(124,111,247,.22);color:var(--accent2)}
+
+/* ─── LAYOUT ────────────────────────────────────────────────────── */
+.main{display:grid;grid-template-columns:290px 1fr 1fr;flex:1;overflow:hidden;height:calc(100vh - 51px)}
+.panel{border-right:1px solid var(--border);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;transition:border-color var(--tr)}
+.panel-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10;transition:background var(--tr)}
+.panel-title{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.panel-right{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:border-color var(--tr)}
+.panel-right-inner{flex:1;overflow-y:auto;padding:12px}
+.panel-right-header{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+.panel-right-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+
+/* ─── TABS ──────────────────────────────────────────────────────── */
+.tab-row{display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:8px}
+.tab-btn{flex:1;padding:5px 8px;border:none;border-radius:5px;background:transparent;color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s}
+.tab-btn.active{background:var(--accent);color:#fff}
+.tab-btn:not(.active):hover{background:var(--surface3);color:var(--text)}
+
+/* ─── SETTINGS ──────────────────────────────────────────────────── */
+.settings-section{padding:11px 13px;border-bottom:1px solid var(--border)}
+.settings-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.unit-toggle{display:flex;background:var(--surface2);border-radius:var(--radius);padding:3px;gap:3px;margin-bottom:10px}
+.unit-btn{flex:1;padding:5px;border:none;border-radius:4px;background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;transition:all .14s}
+.unit-btn.active{background:var(--surface3);color:var(--accent2)}
+.unit-btn:hover{color:var(--text)}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.input-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;display:flex;align-items:center;gap:4px}
+.field input{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 7px;color:var(--text);font-family:var(--mono);font-size:12px;transition:border-color .14s,background .14s;width:100%}
+.field input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.scale-only{display:none}
+.scale-only.visible{display:block}
+
+/* ─── TOOLTIP ICONS ─────────────────────────────────────────────── */
+.tip-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--surface3);color:var(--text3);
+  font-size:9px;font-weight:700;font-family:var(--mono);
+  cursor:help;border:1px solid var(--border2);flex-shrink:0;
+  transition:background .14s,color .14s,border-color .14s;
+}
+.tip-icon:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ─── TOOLTIP POPUP ─────────────────────────────────────────────── */
+.tip-popup{
+  display:none;position:fixed;z-index:9999;
+  width:300px;
+  background:var(--tip-bg);border:1px solid var(--tip-border);
+  border-radius:12px;overflow:hidden;
+  box-shadow:var(--shadow),0 0 0 1px rgba(124,111,247,.08);
+  pointer-events:none;
+}
+.tip-popup.active{display:block;animation:tipIn .16s ease}
+@keyframes tipIn{from{opacity:0;transform:translateY(5px) scale(.97)}to{opacity:1;transform:none}}
+.tip-head{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  padding:9px 13px;display:flex;align-items:center;gap:7px;
+}
+.tip-head-icon{font-size:15px;line-height:1}
+.tip-head-title{font-size:12px;font-weight:700;color:#fff;letter-spacing:.01em}
+.tip-body{padding:11px 13px}
+.tip-desc{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:9px;font-family:var(--sans)}
+.tip-uses{display:flex;flex-direction:column;gap:4px}
+.tip-use-row{display:flex;align-items:flex-start;gap:6px;font-size:10px;color:var(--text2);font-family:var(--mono);line-height:1.45}
+.tip-badge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.b-font {background:rgba(124,111,247,.18);color:var(--accent2)}
+.b-space{background:rgba(74,222,128,.15);color:#4ade80}
+.b-ui   {background:rgba(251,191,36,.15);color:#fbbf24}
+.b-any  {background:rgba(148,163,184,.15);color:#94a3b8}
+.tip-ex{margin-top:9px;padding:7px 9px;background:var(--surface2);border-radius:5px;border-left:2px solid var(--accent)}
+.tip-ex-label{font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase}
+.tip-ex-code{font-size:10px;color:var(--clamp-col);font-family:var(--mono);line-height:1.6;white-space:pre}
+
+/* ─── SIZES TABLE ───────────────────────────────────────────────── */
+.sizes-toolbar{display:flex;align-items:center;padding:8px 13px;border-bottom:1px solid var(--border);gap:5px}
+.sizes-toolbar-title{font-size:11px;font-weight:600;color:var(--text2);flex:1}
+.sizes-list{padding:4px 5px}
+.size-row{display:grid;grid-template-columns:16px 1fr 50px 50px 34px 48px;align-items:center;gap:3px;padding:5px 4px;border-radius:var(--radius);cursor:pointer;border:1px solid transparent;transition:background .1s,border-color .1s}
+.size-row:hover{background:var(--surface2)}
+.size-row.selected{background:var(--accent-dim);border-color:rgba(124,111,247,.3)}
+.size-row.dragging{opacity:.4}
+.drag-over{border-top:2px solid var(--accent)!important}
+.drag-handle{color:var(--text3);font-size:10px;cursor:move;user-select:none;text-align:center}
+.size-name{font-size:12px;font-weight:600;color:var(--text);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.size-val{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:right}
+.size-actions{display:flex;gap:2px;opacity:0;justify-content:flex-end}
+.size-row:hover .size-actions,.size-row.selected .size-actions{opacity:1}
+.icon-btn{background:none;border:none;cursor:pointer;padding:2px;border-radius:3px;color:var(--text3);font-size:11px;transition:color .1s,background .1s;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.icon-btn:hover{background:var(--surface3);color:var(--text)}
+.icon-btn.del:hover{color:var(--red)}
+.icon-btn.edit:hover{color:var(--accent2)}
+.sizes-header{display:grid;grid-template-columns:16px 1fr 50px 50px 34px 48px;gap:3px;padding:4px 4px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin:0 5px}
+
+/* ─── PREVIEW ───────────────────────────────────────────────────── */
+.preview-list{display:flex;flex-direction:column;gap:7px}
+.preview-item{border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;transition:all .14s;background:var(--surface)}
+.preview-item:hover{border-color:var(--border2);background:var(--surface2)}
+.preview-item.selected{border-color:var(--accent);background:var(--accent-dim)}
+.preview-item-label{font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:3px;letter-spacing:.06em}
+.preview-sizes{display:flex;align-items:center}
+.preview-half{flex:1;display:flex;align-items:center;min-height:26px;padding:2px 5px}
+.preview-half:first-child{justify-content:flex-start}
+.preview-half.c{justify-content:center}
+.preview-half:last-child{justify-content:flex-end}
+.preview-divider{width:1px;height:20px;background:var(--border);flex-shrink:0}
+.preview-text-el{font-family:var(--preview-font,var(--sans));color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;transition:font-size .15s;line-height:1.2}
+.preview-text-el.p-tag{font-family:var(--preview-font-p,var(--preview-font,var(--sans)))}
+
+/* ─── VP SLIDER ─────────────────────────────────────────────────── */
+.vp-slider-wrap{padding:9px 13px;border-bottom:1px solid var(--border);background:var(--surface2);transition:background var(--tr);flex-shrink:0}
+.vp-slider-label{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px}
+.vp-slider-val{color:var(--accent2);font-size:11px;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+
+/* ─── CODE BLOCKS ───────────────────────────────────────────────── */
+.code-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:background var(--tr),border-color var(--tr)}
+.code-block-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface2);transition:background var(--tr)}
+.code-block-lang{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.06em}
+.code-content{padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.75;color:var(--code-col);white-space:pre;overflow-x:auto}
+
+/* ─── FLUID INFO BAR ────────────────────────────────────────────── */
+.fluid-info-bar{display:flex;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0}
+.fluid-info-cell{flex:1;padding:7px 11px;border-right:1px solid var(--border)}
+.fluid-info-cell:last-child{border-right:none}
+.fluid-info-label{font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em;margin-bottom:2px;text-transform:uppercase;display:flex;align-items:center;gap:4px}
+.fluid-info-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.fluid-info-val.accent{color:var(--accent2)}
+
+/* ─── CLAMP PILL ────────────────────────────────────────────────── */
+.clamp-pill-wrap{padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.clamp-pill-label{font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em;margin-bottom:5px;text-transform:uppercase;display:flex;align-items:center;gap:4px}
+.clamp-pill{display:flex;align-items:center;gap:8px}
+.clamp-value-display{font-family:var(--mono);font-size:11px;color:var(--clamp-col);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 9px;flex:1;word-break:break-all;line-height:1.4;transition:background var(--tr)}
+
+/* ─── MODAL ─────────────────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:22px;min-width:320px;max-width:400px;width:100%;box-shadow:var(--shadow);transition:background var(--tr)}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.modal-fields{display:flex;flex-direction:column;gap:10px}
+.modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+
+/* ─── COPY FLASH ────────────────────────────────────────────────── */
+.copy-flash{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#fff;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:999}
+.copy-flash.show{opacity:1;transform:translateY(0)}
+
+/* misc */
+.empty{text-align:center;padding:26px 16px;color:var(--text3);font-size:12px;font-family:var(--mono)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* Spacing tab distinct colors */
+.tab-btn[data-tab="padding"].active{background:#3b82f6;border-color:#3b82f6}
+.tab-btn[data-tab="margin"].active {background:#d97706;border-color:#d97706}
+.tab-btn[data-tab="gap"].active    {background:#16a34a;border-color:#16a34a}
+.tab-btn[data-tab="radius"].active {background:#7c3aed;border-color:#7c3aed}
+.tab-btn[data-tab="shadow"].active {background:#be185d;border-color:#be185d}
+[data-theme="light"] .tab-btn[data-tab="padding"].active{background:#2563eb;border-color:#2563eb}
+[data-theme="light"] .tab-btn[data-tab="margin"].active{background:#b45309;border-color:#b45309}
+[data-theme="light"] .tab-btn[data-tab="gap"].active   {background:#15803d;border-color:#15803d}
+[data-theme="light"] .tab-btn[data-tab="radius"].active{background:#6d28d9;border-color:#6d28d9}
+[data-theme="light"] .tab-btn[data-tab="shadow"].active{background:#9d174d;border-color:#9d174d}
+/* Viewport preset buttons */
+.vp-preset-btn{
+  padding:3px 9px;border-radius:4px;border:1px solid var(--border2);
+  background:var(--surface3);color:var(--text3);
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  cursor:pointer;transition:all .13s;white-space:nowrap;line-height:1.5;
+}
+.vp-preset-btn:hover{background:var(--surface2);color:var(--text)}
+.vp-preset-btn.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+@media(max-width:900px){.main{grid-template-columns:1fr;height:auto;overflow:visible}.panel,.panel-right{border-right:none}header{flex-wrap:wrap;gap:8px}}
+</style>
+</head>
+<body>
+
+<!-- ── TOOLTIP POPUP ─────────────────────────────────────────────── -->
+<div class="tip-popup" id="tip-popup">
+  <div class="tip-head">
+    <span class="tip-head-icon" id="tip-icon-el">ℹ</span>
+    <span class="tip-head-title" id="tip-title">Info</span>
+  </div>
+  <div class="tip-body">
+    <div class="tip-desc" id="tip-desc"></div>
+    <div class="tip-uses" id="tip-uses"></div>
+    <div class="tip-ex" id="tip-ex" style="display:none">
+      <div class="tip-ex-label">Example</div>
+      <div class="tip-ex-code" id="tip-ex-code"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HEADER ────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='none'/>
+        <path d='M31.25 56.25 75 9.375 50 43.75h34.375L25 90.625 50 56.25Z' fill='white'/>
+      </svg>
+</div>
+    <div>
+      <div style="font-size:15px;font-weight:800;letter-spacing:.02em;line-height:1;">W+ Clamp Calculator</div>
+      <div style="font-size:9px;font-weight:400;color:var(--text3);letter-spacing:.06em;line-height:1;margin-top:2px;">calculate your site’s typography & more for better readability and visual balance.</div>
+    </div>
+  </div>
+
+  <!-- ── PROJECT INFO BAR ── -->
+  <div id="project-bar" style="
+    flex:1;margin:0 0;
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:8px;padding:6px 12px;
+    transition:border-color .15s,background .15s;
+    min-width:280px;max-width:520px;
+  ">
+    <!-- favicon placeholder -->
+    <div id="proj-favicon" style="width:30px;height:30px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">
+      <span id="proj-favicon-emoji">🌐</span>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span id="proj-name" style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">My Project</span>
+        <span id="proj-url" style="font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:1px;">
+        <span id="proj-desc" style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans);">Click to add project details…</span>
+        <span id="proj-tags" style="display:flex;gap:3px;flex-shrink:0;"></span>
+      </div>
+    </div>
+    <!-- pencil icon -->
+    <div style="flex-shrink:0;color:var(--text3);font-size:13px;padding:4px 6px;border-radius:4px;transition:color .13s,background .13s;cursor:pointer;" onclick="openProjectModal()" title="Edit project details" onmouseenter="this.style.color='var(--accent2)';this.style.background='var(--surface3)'" onmouseleave="this.style.color='var(--text3)';this.style.background='transparent'">✎</div>
+  </div>
+
+  <div class="header-right">
+    <div class="header-actions">
+      <button class="btn" id="btn-export">↓ Export JSON</button>
+      <button class="btn" id="btn-import">↑ Import JSON</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none">
+      <button class="btn" id="btn-copy-all">Copy All CSS</button>
+      <button class="btn" id="btn-global-reset" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.08);" title="Reset everything to defaults">↺ Reset All</button>
+      <button class="btn" id="btn-global-clear" style="color:var(--red);border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.08);" title="Clear everything">⊗ Clear All</button>
+    </div>
+    <label class="theme-toggle" title="Toggle dark / light mode">
+      <input type="checkbox" id="theme-checkbox">
+      <div class="theme-track"></div>
+      <div class="theme-thumb"></div>
+    </label>
+  </div>
+</header>
+
+<!-- ── PROJECT MODAL ────────────────────────────────────────────── -->
+<div class="modal-overlay" id="project-modal-overlay">
+  <div class="modal" style="max-width:480px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:6px;background:var(--accent-dim);border:1px solid rgba(124,111,247,.3);display:flex;align-items:center;justify-content:center;font-size:16px;" id="proj-modal-favicon-preview">🌐</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Project Details</div>
+          <div style="font-size:10px;color:var(--text3);">Which site or project is this token set for?</div>
+        </div>
+      </div>
+      <button onclick="closeProjectModal()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:4px 6px;border-radius:4px;transition:color .13s,background .13s;" onmouseenter="this.style.color='var(--red)';this.style.background='rgba(248,113,113,0.1)'" onmouseleave="this.style.color='var(--text3)';this.style.background='none'" title="Close">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div class="field">
+        <label>Site / Project Name</label>
+        <input type="text" id="proj-input-name" placeholder="e.g. My Portfolio, Client Dashboard…">
+      </div>
+      <div class="field">
+        <label>Website URL</label>
+        <input type="text" id="proj-input-url" placeholder="e.g. https://mysite.com">
+      </div>
+      <div class="field">
+        <label>Description / Notes</label>
+        <input type="text" id="proj-input-desc" placeholder="e.g. Redesign 2026, Figma handoff, v2 tokens…">
+      </div>
+      <div class="input-grid">
+        <div class="field">
+          <label>Platforms / Tools</label>
+          <input type="text" id="proj-input-Tools" placeholder="e.g. WordPress, Elementor, Divi…">
+        </div>
+        <div class="field">
+          <label>Designer / Author</label>
+          <input type="text" id="proj-input-author" placeholder="e.g. Your name">
+        </div>
+      </div>
+      <div class="field">
+        <label>Favicon Emoji (optional)</label>
+        <input type="text" id="proj-input-emoji" placeholder="e.g. 🚀 or leave blank" maxlength="4" style="width:120px;">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+      <button class="btn" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProjectModal()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GLOBAL CONFIRM MODAL ──────────────────────────────────────── -->
+<div class="modal-overlay" id="global-confirm-overlay">
+  <div class="modal" style="max-width:460px;">
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="gcm-icon" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;"></div>
+        <div>
+          <div id="gcm-title" style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;"></div>
+          <div id="gcm-subtitle" style="font-size:10px;color:var(--text3);font-family:var(--mono);"></div>
+        </div>
+      </div>
+      <button onclick="closeGlobalConfirm()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:4px 6px;border-radius:4px;transition:color .13s,background .13s;flex-shrink:0;" onmouseenter="this.style.color='var(--red)';this.style.background='rgba(248,113,113,0.1)'" onmouseleave="this.style.color='var(--text3)';this.style.background='none'">✕</button>
+    </div>
+
+    <!-- What will be affected -->
+    <div id="gcm-body" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:var(--mono);">What will be affected</div>
+      <div id="gcm-items" style="display:flex;flex-direction:column;gap:7px;"></div>
+    </div>
+
+    <!-- Warning text -->
+    <div id="gcm-warning" style="display:flex;align-items:center;gap:8px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:6px;padding:10px 12px;margin-bottom:18px;">
+      <span style="font-size:15px;flex-shrink:0;">⚠️</span>
+      <span id="gcm-warning-text" style="font-size:11px;color:var(--red);font-family:var(--mono);line-height:1.5;"></span>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeGlobalConfirm()" style="padding:7px 16px;">No, Cancel</button>
+      <button id="gcm-confirm-btn" style="padding:7px 18px;border-radius:6px;border:none;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;transition:all .14s;"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ──────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- LEFT panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Mode</div>
+      <div class="tab-row">
+        <button class="tab-btn active" data-tab="class"   data-tip="tab-class">Class</button>
+        <button class="tab-btn"        data-tab="tag"     data-tip="tab-tag">Tag</button>
+        <button class="tab-btn"        data-tab="scale"   data-tip="tab-scale">Scale</button>
+      </div>
+      <div class="tab-row" style="margin-top:6px;">
+        <button class="tab-btn" data-tab="padding" data-tip="tab-padding">Padding</button>
+        <button class="tab-btn" data-tab="margin"  data-tip="tab-margin">Margin</button>
+        <button class="tab-btn" data-tab="gap"     data-tip="tab-gap">Gap</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <label class="settings-label">Unit Type <span class="tip-icon" data-tip="unit-type">?</span></label>
+      <div class="unit-toggle">
+        <button class="unit-btn active" data-unit="px">px</button>
+        <button class="unit-btn" data-unit="rem">rem</button>
+      </div>
+      <div class="input-grid cols3">
+        <div class="field">
+          <label>Root (px) <span class="tip-icon" data-tip="root-size">?</span></label>
+          <input type="number" id="root-size" value="16" min="1">
+        </div>
+        <div class="field">
+          <label>Min VP <span class="tip-icon" data-tip="min-vp">?</span></label>
+          <input type="number" id="min-viewport" value="375">
+        </div>
+        <div class="field">
+          <label>Max VP <span class="tip-icon" data-tip="max-vp">?</span></label>
+          <input type="number" id="max-viewport" value="1100">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section scale-only" id="scale-settings">
+      <label class="settings-label">Typographic Scale <span class="tip-icon" data-tip="type-scale">?</span></label>
+      <div class="input-grid">
+        <div class="field">
+          <label>P Min Font <span class="tip-icon" data-tip="scale-p-min">?</span></label>
+          <input type="number" id="scale-p-min" value="16" step="0.1">
+        </div>
+        <div class="field">
+          <label>P Max Font <span class="tip-icon" data-tip="scale-p-max">?</span></label>
+          <input type="number" id="scale-p-max" value="16" step="0.1">
+        </div>
+        <div class="field">
+          <label>Ratio Min <span class="tip-icon" data-tip="scale-ratio">?</span></label>
+          <input type="number" id="scale-ratio-min" value="1.333" step="0.01">
+        </div>
+        <div class="field">
+          <label>Ratio Max <span class="tip-icon" data-tip="scale-ratio">?</span></label>
+          <input type="number" id="scale-ratio-max" value="1.4" step="0.01">
+        </div>
+        <div class="field">
+          <label>Line Height <span class="tip-icon" data-tip="line-height">?</span></label>
+          <input type="number" id="scale-line-height" value="1.4" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sizes-toolbar">
+        <span class="sizes-toolbar-title" id="sizes-title">Font Size Classes</span>
+        <button class="btn btn-primary" id="btn-add"   style="padding:4px 9px;font-size:11px;">+ Add</button>
+        <button class="btn btn-danger"  id="btn-reset" style="padding:4px 9px;font-size:11px;">Reset</button>
+        <button class="btn btn-danger"  id="btn-clear" style="padding:4px 9px;font-size:11px;">Clear</button>
+      </div>
+      <div class="sizes-header">
+        <div></div><div id="name-col-header">Class</div>
+        <div style="text-align:right">Min</div><div style="text-align:right">Max</div>
+        <div style="text-align:right" id="lh-col-header">LH</div><div></div>
+      </div>
+      <div class="sizes-list" id="sizes-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER panel: Preview -->
+  <div class="panel-right">
+    <div class="panel-right-header">
+      <span class="panel-right-title">Preview</span>
+      <div id="font-url-wrap" style="display:flex;gap:5px;align-items:center;">
+        <input type="text" id="preview-font-url" placeholder="WOFF2 URL (headings)"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;color:var(--text2);font-family:var(--mono);font-size:10px;width:148px;transition:all .18s">
+        <input type="text" id="preview-font-url-p" placeholder="WOFF2 URL (body)"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;color:var(--text2);font-family:var(--mono);font-size:10px;width:128px;transition:all .18s">
+        <span class="tip-icon" data-tip="preview-fonts">?</span>
+      </div>
+    </div>
+    <div class="vp-slider-wrap">
+      <div class="vp-slider-label">
+        <span style="display:flex;align-items:center;gap:4px;">
+          Preview Viewport <span class="tip-icon" data-tip="vp-slider">?</span>
+        </span>
+        <span class="vp-slider-val" id="vp-val">1280px</span>
+      </div>
+      <!-- Viewport preset buttons -->
+      <div style="display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap;">
+        <button class="vp-preset-btn" data-vp="375"  title="Small phone">★ 375</button>
+        <button class="vp-preset-btn" data-vp="390"  title="iPhone 14/15">390</button>
+        <button class="vp-preset-btn" data-vp="430"  title="iPhone Plus">430</button>
+        <button class="vp-preset-btn" data-vp="768"  title="Tablet">768</button>
+        <button class="vp-preset-btn" data-vp="1024" title="Tablet landscape">1024</button>
+        <button class="vp-preset-btn active" data-vp="1280" title="Desktop">★ 1280</button>
+        <button class="vp-preset-btn" data-vp="1440" title="Wide desktop">1440</button>
+        <button class="vp-preset-btn" data-vp="1920" title="Full HD">1920</button>
+      </div>
+      <input type="range" id="vp-slider" min="375" max="1920" value="1280">
+    </div>
+    <div class="panel-right-inner">
+      <div class="preview-list" id="preview-list"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT panel: Code -->
+  <div class="panel-right" style="border-right:none">
+    <div class="panel-right-header">
+      <span class="panel-right-title" id="selected-code-title">Selected CSS</span>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-clamp" id="btn-copy-clamp" style="padding:4px 9px;font-size:11px;">⎘ clamp()</button>
+        <button class="btn" id="btn-copy-selected" style="padding:4px 9px;font-size:11px;">Copy CSS</button>
+      </div>
+    </div>
+
+    <div class="fluid-info-bar">
+      <div class="fluid-info-cell">
+        <div class="fluid-info-label">Min Size <span class="tip-icon" data-tip="info-min">?</span></div>
+        <div class="fluid-info-val" id="info-min">—</div>
+      </div>
+      <div class="fluid-info-cell">
+        <div class="fluid-info-label">Max Size <span class="tip-icon" data-tip="info-max">?</span></div>
+        <div class="fluid-info-val" id="info-max">—</div>
+      </div>
+      <div class="fluid-info-cell">
+        <div class="fluid-info-label">Slope <span class="tip-icon" data-tip="info-slope">?</span></div>
+        <div class="fluid-info-val accent" id="info-slope">—</div>
+      </div>
+      <div class="fluid-info-cell" id="info-lh-cell">
+        <div class="fluid-info-label"><span id="info-lh-label">Line Height</span> <span class="tip-icon" data-tip="line-height">?</span></div>
+        <div class="fluid-info-val" id="info-lh">—</div>
+      </div>
+    </div>
+
+    <div class="clamp-pill-wrap">
+      <!-- Selected name pill -->
+      <div id="sel-name-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;">Selected</span>
+        <code id="sel-name-badge" style="
+          font-family:var(--mono);font-size:12px;font-weight:600;
+          background:var(--accent-dim);border:1px solid rgba(124,111,247,.35);
+          color:var(--accent2);border-radius:5px;padding:3px 10px;
+          flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+          transition:background .15s;
+        ">—</code>
+        <button class="btn" id="btn-copy-name" style="padding:4px 10px;font-size:11px;flex-shrink:0;" title="Copy name">⎘ Copy name</button>
+      </div>
+      <div class="clamp-pill-label">clamp() value <span class="tip-icon" data-tip="clamp-value">?</span></div>
+      <div class="clamp-pill">
+        <code class="clamp-value-display" id="clamp-value-display">—</code>
+        <button class="btn btn-primary" id="btn-copy-clamp2" style="padding:5px 10px;font-size:11px;white-space:nowrap;flex-shrink:0;">⎘ Copy value</button>
+      </div>
+    </div>
+
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div class="code-block">
+        <div class="code-block-header"><span class="code-block-lang">css</span></div>
+        <div class="code-content" id="selected-code">/* Select a size to see CSS */</div>
+      </div>
+    </div>
+
+    <div class="panel-right-header" style="flex-shrink:0;">
+      <span class="panel-right-title" id="all-code-title">All CSS</span>
+      <button class="btn" id="btn-copy-all-right" style="padding:4px 9px;font-size:11px;">Copy</button>
+    </div>
+    <div class="panel-right-inner">
+      <div class="code-block">
+        <div class="code-block-header"><span class="code-block-lang">css</span></div>
+        <div class="code-content" id="all-code">/* Generated CSS will appear here */</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="modal-title" id="modal-title" style="margin-bottom:0;">Edit Font Size</div>
+      <button id="modal-close-x" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:4px 6px;border-radius:4px;transition:color .13s,background .13s;" onmouseenter="this.style.color='var(--red)';this.style.background='rgba(248,113,113,0.1)'" onmouseleave="this.style.color='var(--text3)';this.style.background='none'" title="Close">✕</button>
+    </div>
+    <div class="modal-fields">
+      <div class="field">
+        <label id="modal-name-label">Class Name</label>
+        <input type="text" id="modal-name" placeholder="e.g. large">
+      </div>
+      <div class="input-grid">
+        <div class="field">
+          <label id="modal-min-label">Min Size (px)</label>
+          <input type="number" id="modal-min" step="0.1">
+        </div>
+        <div class="field">
+          <label id="modal-max-label">Max Size (px)</label>
+          <input type="number" id="modal-max" step="0.1">
+        </div>
+      </div>
+      <div class="field" id="modal-lh-row">
+        <label>Line Height <span class="tip-icon" data-tip="line-height">?</span></label>
+        <input type="number" id="modal-lh" step="0.1" value="1.4">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="copy-flash" id="copy-flash">Copied to clipboard!</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// TOOLTIP DATA
+// ═══════════════════════════════════════════════════════════
+const TIPS = {
+  'tab-class':{
+    icon:'🎨',title:'Class Mode',
+    desc:'Generates reusable CSS utility classes. Apply them to any HTML element to set its font-size. Perfect for design systems, Tailwind-style utilities, and component libraries.',
+    uses:[
+      {b:'font', t:'Headings: <h1 class="xxxlarge">Title</h1>'},
+      {b:'font', t:'Body: <p class="normal">Paragraph text</p>'},
+      {b:'font', t:'Labels, captions: <span class="xsmall">'},
+      {b:'ui',   t:'Buttons, navs, any element needing a size'},
+    ],
+    ex:'.large {\n  font-size: clamp(1.5rem, 1.37vw + 1rem, 1.75rem);\n  line-height: 1.3;\n}'
+  },
+  'tab-tag':{
+    icon:'🏷️',title:'Tag Mode',
+    desc:'Directly targets HTML tags like h1–h6 and p. The CSS applies globally to those tags without adding any class names. Ideal for a site-wide typography reset.',
+    uses:[
+      {b:'font', t:'h1 → h6 all sized automatically with no extra classes'},
+      {b:'font', t:'p: paragraph / body copy global sizing'},
+      {b:'any',  t:'Works great as a base stylesheet layer'},
+    ],
+    ex:'h1 { font-size: clamp(2.25rem, ...); }\nh2 { font-size: clamp(1.88rem, ...); }'
+  },
+  'tab-scale':{
+    icon:'📐',title:'Scale Mode',
+    desc:'Auto-generates a full h1–h6 + p scale using a modular ratio. Every heading size is your base paragraph size multiplied by the ratio raised to a power. Produces mathematically harmonious type hierarchies.',
+    uses:[
+      {b:'font', t:'Full heading hierarchy in one click'},
+      {b:'font', t:'Perfect 4th (1.333) · Major 3rd (1.25) · Golden (1.618)'},
+      {b:'any',  t:'Use smaller ratio on mobile, larger on desktop'},
+    ],
+    ex:'h1 = p × ratio⁵\nh2 = p × ratio⁴\n...\nh6 = p × ratio¹'
+  },
+  'tab-padding':{
+    icon:'📦',title:'Padding Mode',
+    desc:'Generates fluid CSS custom properties for padding. Use them on any element — they scale smoothly between your min and max values across viewport widths.',
+    uses:[
+      {b:'space', t:'Section padding: padding-block: var(--pad-xl)'},
+      {b:'space', t:'Card inner spacing: padding: var(--pad-md)'},
+      {b:'space', t:'Button padding: padding-inline: var(--pad-sm)'},
+      {b:'ui',    t:'Container gutters: padding-inline: var(--pad-lg)'},
+    ],
+    ex:'--pad-lg: clamp(2rem, 4vw + 0.5rem, 4rem);\n.section { padding-block: var(--pad-lg); }'
+  },
+  'tab-margin':{
+    icon:'⬜',title:'Margin Mode',
+    desc:'Generates fluid CSS custom properties for margins. Perfect for consistent, responsive spacing between sections, components, and elements.',
+    uses:[
+      {b:'space', t:'Section gap: margin-block: var(--mar-xl)'},
+      {b:'space', t:'Component spacing: margin-bottom: var(--mar-md)'},
+      {b:'space', t:'Text spacing: margin-top: var(--mar-sm)'},
+      {b:'ui',    t:'Auto centering still works: margin-inline: auto'},
+    ],
+    ex:'--mar-md: clamp(1rem, 2vw + 0.5rem, 2rem);\n.card { margin-bottom: var(--mar-md); }'
+  },
+  'tab-gap':{
+    icon:'⬌',title:'Gap Mode',
+    desc:'Generates fluid CSS custom properties for gap spacing in Flexbox and Grid layouts. Use them in gap, row-gap, or column-gap.',
+    uses:[
+      {b:'space', t:'Grid layout: gap: var(--gap-md)'},
+      {b:'space', t:'Flex nav: gap: var(--gap-sm)'},
+      {b:'space', t:'Card grid: column-gap: var(--gap-lg)'},
+      {b:'ui',    t:'Form fields: gap: var(--gap-xs)'},
+    ],
+    ex:'--gap-md: clamp(1rem, 2vw, 2rem);\n.grid { display: grid; gap: var(--gap-md); }'
+  },
+  'tab-radius':{
+    icon:'▢',title:'Border Radius Mode',
+    desc:'Generates fluid CSS custom properties for border-radius values. Corners that scale smoothly from small to large — perfect for buttons, cards, modals and pill shapes.',
+    uses:[
+      {b:'ui',   t:'Button corners: border-radius: var(--rad-sm)'},
+      {b:'ui',   t:'Card corners: border-radius: var(--rad-md)'},
+      {b:'ui',   t:'Modal rounded: border-radius: var(--rad-lg)'},
+      {b:'ui',   t:'Pill / full round: border-radius: var(--rad-full)'},
+      {b:'ui',   t:'Input fields: border-radius: var(--rad-xs)'},
+    ],
+    ex:'--rad-md: clamp(0.5rem, 1vw, 0.75rem);\n.card { border-radius: var(--rad-md); }'
+  },
+  'tab-shadow':{
+    icon:'◫',title:'Box Shadow Mode',
+    desc:'Generates fluid CSS custom properties for box-shadow blur/spread values. Shadows that scale from subtle to dramatic, creating depth that adapts to screen size.',
+    uses:[
+      {b:'ui',   t:'Subtle elevation: box-shadow: 0 var(--shd-xs) ...'},
+      {b:'ui',   t:'Card shadow: box-shadow: 0 var(--shd-sm) ...'},
+      {b:'ui',   t:'Modal shadow: box-shadow: 0 var(--shd-md) ...'},
+      {b:'ui',   t:'Dropdown: box-shadow: 0 var(--shd-lg) ...'},
+      {b:'ui',   t:'Combine with blur: blur = var * 2 for soft shadows'},
+    ],
+    ex:'--shd-md: clamp(0.25rem, 0.5vw, 0.5rem);\n.card { box-shadow: 0 var(--shd-md) calc(var(--shd-md)*2) rgba(0,0,0,.15); }'
+  },
+  'unit-type':{
+    icon:'📏',title:'Input Unit Type',
+    desc:'Choose whether you type your font sizes in px or rem. The generated clamp() output always uses rem (better for accessibility — it respects browser zoom & user font-size preferences).',
+    uses:[
+      {b:'any', t:'px: familiar from design tools like Figma'},
+      {b:'any', t:'rem: relative to root, 1rem = 16px by default'},
+    ],
+    ex:'16px = 1rem\n24px = 1.5rem\n32px = 2rem'
+  },
+  'root-size':{
+    icon:'🔢',title:'Root Font Size',
+    desc:'The base pixel value of 1rem — almost always 16px (browser default). Used to convert your px inputs into rem for the clamp() formula. Only change this if your project overrides html { font-size }.',
+    uses:[
+      {b:'any', t:'Default 16px → 1rem = 16px'},
+      {b:'any', t:'Custom 10px → 1rem = 10px (easy math trick)'},
+    ],
+    ex:'html { font-size: 16px; } /* your root */'
+  },
+  'min-vp':{
+    icon:'📱',title:'Min Viewport',
+    desc:'The smallest screen width where fluid scaling begins. Below this width, the font stays locked at the minimum size — it won\'t shrink further.',
+    uses:[
+      {b:'any', t:'320px → small Android phones'},
+      {b:'any', t:'375px → iPhone SE, recommended default'},
+      {b:'any', t:'390px → iPhone 14/15 Pro'},
+      {b:'any', t:'430px → iPhone 14 Plus'},
+    ],
+    ex:'At viewport ≤ 375px:\nfont-size = min size (locked)'
+  },
+  'max-vp':{
+    icon:'🖥️',title:'Max Viewport',
+    desc:'The screen width where fluid scaling ends and the font locks at the maximum size. Beyond this breakpoint, the font won\'t grow any further.',
+    uses:[
+      {b:'any', t:'768px → tablet portrait breakpoint'},
+      {b:'any', t:'1100px → typical content max-width (default)'},
+      {b:'any', t:'1280px → large desktop'},
+      {b:'any', t:'1440px → wide desktop / design canvas'},
+    ],
+    ex:'At viewport ≥ 1100px:\nfont-size = max size (locked)'
+  },
+  'type-scale':{
+    icon:'🎵',title:'Typographic Scale',
+    desc:'A musical-ratio system for type: each heading level is your paragraph size multiplied by the ratio. The same ratio used in Western music — produces naturally pleasing visual rhythm.',
+    uses:[
+      {b:'font', t:'1.125 — Major Second: very subtle, compact text'},
+      {b:'font', t:'1.250 — Major Third: clean, understated hierarchy'},
+      {b:'font', t:'1.333 — Perfect Fourth: balanced default ✓'},
+      {b:'font', t:'1.414 — Augmented Fourth: more dramatic jumps'},
+      {b:'font', t:'1.618 — Golden Ratio: powerful editorial hierarchy'},
+    ],
+    ex:'// Perfect Fourth (1.333)\nh1 = 16 × 1.333⁵ = 42.5px\nh2 = 16 × 1.333⁴ = 31.9px'
+  },
+  'scale-p-min':{
+    icon:'⬇️',title:'Paragraph Min Font',
+    desc:'The smallest paragraph body text size on mobile screens. All heading levels are derived from this value × the scale ratio. Keep at 14–16px for readability.',
+    uses:[
+      {b:'font', t:'Body copy on small phones: 14–16px recommended'},
+      {b:'font', t:'Never go below 14px — accessibility risk'},
+    ],
+    ex:'scalePMin = 16px\nh1 min = 16 × 1.333⁵ ≈ 42px'
+  },
+  'scale-p-max':{
+    icon:'⬆️',title:'Paragraph Max Font',
+    desc:'The largest paragraph body text size on wide desktop screens. Longer reading lines benefit from slightly larger text (17–20px).',
+    uses:[
+      {b:'font', t:'Long-form reading: 18–20px comfortable'},
+      {b:'font', t:'UI-heavy sites: 16px is fine'},
+    ],
+    ex:'scalePMax = 20px\nh1 max = 20 × 1.4⁵ ≈ 54px'
+  },
+  'scale-ratio':{
+    icon:'✖️',title:'Scale Ratio',
+    desc:'The multiplier between each heading level. Set different ratios for small and large viewports — a tighter ratio on mobile keeps headings from getting too large on small screens.',
+    uses:[
+      {b:'font', t:'Ratio Min → controls heading sizes at Min VP'},
+      {b:'font', t:'Ratio Max → controls heading sizes at Max VP'},
+      {b:'font', t:'Tip: use smaller ratio for mobile (e.g. 1.2 min, 1.4 max)'},
+    ],
+    ex:'h1 = base × ratio^5\nh2 = h1 ÷ ratio\nh3 = h2 ÷ ratio ...'
+  },
+  'line-height':{
+    icon:'↕️',title:'Line Height',
+    desc:'Vertical spacing between lines. A unitless value (e.g. 1.4) means 1.4× the element\'s own font-size. Larger text needs tighter spacing; small body text needs more room to breathe.',
+    uses:[
+      {b:'font',  t:'Headings / display: 1.05–1.25 (tight, bold)'},
+      {b:'font',  t:'Body paragraphs: 1.5–1.75 (comfortable reading)'},
+      {b:'ui',    t:'UI labels, buttons, navs: 1.2–1.4'},
+      {b:'space', t:'Also affects block height — relevant for layout calc'},
+    ],
+    ex:'.heading { line-height: 1.15; }\np { line-height: 1.65; }'
+  },
+  'preview-fonts':{
+    icon:'🔤',title:'Custom Font Preview',
+    desc:'Preview your actual project fonts by pasting a direct URL to a .woff2 file. Headings and body text can use different fonts. The URL must be CORS-accessible from your browser.',
+    uses:[
+      {b:'any', t:'Must end in .woff2'},
+      {b:'any', t:'Headings field → all non-paragraph previews'},
+      {b:'any', t:'Body field → paragraph (p) previews only'},
+    ],
+    ex:'https://yoursite.com/fonts/Heading.woff2'
+  },
+  'vp-slider':{
+    icon:'↔️',title:'Preview Viewport',
+    desc:'Simulate any screen width to see how your sizes interpolate. Use the preset buttons for common device widths, or drag the slider for any value in between.',
+    uses:[
+      {b:'any', t:'📱 375–430px → phones (SE, iPhone 14/15, Plus)'},
+      {b:'any', t:'⬛ 768–1024px → tablet / tablet landscape'},
+      {b:'any', t:'🖥 1280px → desktop (default)'},
+      {b:'any', t:'1440–1920px → wide / full-HD desktop'},
+      {b:'any', t:'Left = min size · Center = current vp · Right = max size'},
+    ],
+    ex:'At 750px vp:\nsize = min + (750-375)/(1100-375) × (max-min)'
+  },
+  'info-min':{
+    icon:'⬇️',title:'Minimum Size',
+    desc:'The font-size value in rem when the viewport is at or below your Min Viewport setting. This is the floor — the font will never go smaller than this.',
+    uses:[{b:'font', t:'Smallest the font ever renders'}],
+    ex:'1.00rem = 16px\n(at root font-size: 16px)'
+  },
+  'info-max':{
+    icon:'⬆️',title:'Maximum Size',
+    desc:'The font-size value in rem when the viewport is at or above your Max Viewport. This is the ceiling — the font will never grow larger than this.',
+    uses:[{b:'font', t:'Largest the font ever renders'}],
+    ex:'3.25rem = 52px\n(at root font-size: 16px)'
+  },
+  'info-slope':{
+    icon:'📈',title:'Slope (vw rate)',
+    desc:'How fast the font grows per 1vw (1% of viewport width). Higher slope = faster scaling. This value is reusable for fluid spacing — paste it in padding/margin clamp() calls for harmonious proportions.',
+    uses:[
+      {b:'font',  t:'Controls the fluid scaling speed'},
+      {b:'space', t:'Reuse in: padding: clamp(1rem, SLOPEvw + Xrem, 2rem)'},
+      {b:'space', t:'Reuse in: gap, margin, border-radius too'},
+    ],
+    ex:'slope = (maxPx - minPx)\n      ÷ (maxVP - minVP) × 100'
+  },
+  'clamp-value':{
+    icon:'🧮',title:'clamp() Formula',
+    desc:'The raw CSS clamp() function. You can paste this anywhere in your stylesheet that accepts a length — not just font-size! Use it for fluid spacing, sizing, and layout too.',
+    uses:[
+      {b:'font',  t:'font-size: clamp(...)'},
+      {b:'space', t:'padding: clamp(...)'},
+      {b:'space', t:'margin: clamp(...)'},
+      {b:'space', t:'gap: clamp(...)'},
+      {b:'ui',    t:'border-radius: clamp(...)'},
+      {b:'ui',    t:'width / max-width: clamp(...)'},
+      {b:'ui',    t:'height / min-height: clamp(...)'},
+    ],
+    ex:'/* Font */'+'font-size: clamp(1rem, 2.5vw + 0.5rem, 2rem);\n\n/* Padding */\npadding-inline: clamp(1rem, 4vw, 3rem);\n\n/* Gap */\ngap: clamp(0.5rem, 2vw, 1.5rem);'
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// TOOLTIP ENGINE
+// ═══════════════════════════════════════════════════════════
+const tipPopup = document.getElementById('tip-popup');
+const badgeCls = { font:'b-font', space:'b-space', ui:'b-ui', any:'b-any' };
+let tipTimer = null;
+
+function showTip(key, anchor) {
+  const d = TIPS[key]; if (!d) return;
+  document.getElementById('tip-icon-el').textContent  = d.icon || 'ℹ';
+  document.getElementById('tip-title').textContent     = d.title;
+  document.getElementById('tip-desc').textContent      = d.desc;
+  document.getElementById('tip-uses').innerHTML = (d.uses||[]).map(u=>
+    `<div class="tip-use-row"><span class="tip-badge ${badgeCls[u.b]||'b-any'}">${u.b}</span><span>${u.t}</span></div>`
+  ).join('');
+  const exEl = document.getElementById('tip-ex');
+  const exCode = document.getElementById('tip-ex-code');
+  if (d.ex) { exEl.style.display='block'; exCode.textContent=d.ex; }
+  else       { exEl.style.display='none'; }
+  tipPopup.classList.add('active');
+  positionTip(anchor);
+}
+function hideTip() { tipPopup.classList.remove('active'); }
+function positionTip(a) {
+  const r = a.getBoundingClientRect();
+  const pw = 300, ph = tipPopup.offsetHeight || 220;
+  let left = r.right + 10, top = r.top;
+  if (left + pw > window.innerWidth - 10) left = r.left - pw - 10;
+  if (top + ph > window.innerHeight - 10) top  = window.innerHeight - ph - 10;
+  if (top < 8) top = 8;
+  tipPopup.style.left = left + 'px';
+  tipPopup.style.top  = top + 'px';
+}
+
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest('[data-tip]');
+  if (el) { clearTimeout(tipTimer); tipTimer = setTimeout(() => showTip(el.dataset.tip, el), 120); }
+});
+document.addEventListener('mouseout', e => {
+  const el = e.target.closest('[data-tip]');
+  if (el) { clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 80); }
+});
+
+// ═══════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════════════════════════
+const themeCB = document.getElementById('theme-checkbox');
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  themeCB.checked = !dark;
+  try { localStorage.setItem('fcc_theme', dark ? 'dark' : 'light'); } catch(e) {}
+}
+themeCB.addEventListener('change', () => applyTheme(!themeCB.checked));
+try { applyTheme(localStorage.getItem('fcc_theme') !== 'light'); } catch(e) { applyTheme(true); }
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let activeTab='class', unitType='px', rootSize=16;
+let minViewport=375, maxViewport=1100;
+let scalePMin=16, scalePMax=16, scaleRatioMin=1.333, scaleRatioMax=1.4, scaleLH=1.4;
+let selectedId={class:6,tag:1,scale:7,padding:1,margin:1,gap:1,radius:1,shadow:1}, editingId=null, nextId={class:9,tag:8,scale:8,padding:7,margin:7,gap:7,radius:7,shadow:7};
+
+const SPACING_TABS=['padding','margin','gap','radius','shadow'];
+function isSpacingTab(){return SPACING_TABS.includes(activeTab)}
+
+const defaultSpacingSizes={
+  padding:[
+    {id:1,name:'pad-xs', min:4,  max:8},
+    {id:2,name:'pad-sm', min:8,  max:16},
+    {id:3,name:'pad-md', min:16, max:24},
+    {id:4,name:'pad-lg', min:24, max:40},
+    {id:5,name:'pad-xl', min:40, max:64},
+    {id:6,name:'pad-2xl',min:64, max:96},
+  ],
+  margin:[
+    {id:1,name:'mar-xs', min:4,  max:8},
+    {id:2,name:'mar-sm', min:8,  max:16},
+    {id:3,name:'mar-md', min:16, max:32},
+    {id:4,name:'mar-lg', min:32, max:56},
+    {id:5,name:'mar-xl', min:56, max:80},
+    {id:6,name:'mar-2xl',min:80, max:120},
+  ],
+  gap:[
+    {id:1,name:'gap-xs', min:4,  max:8},
+    {id:2,name:'gap-sm', min:8,  max:16},
+    {id:3,name:'gap-md', min:16, max:24},
+    {id:4,name:'gap-lg', min:24, max:40},
+    {id:5,name:'gap-xl', min:40, max:64},
+    {id:6,name:'gap-2xl',min:64, max:96},
+  ],
+  radius:[
+    {id:1,name:'rad-xs', min:2,  max:4},
+    {id:2,name:'rad-sm', min:4,  max:8},
+    {id:3,name:'rad-md', min:8,  max:12},
+    {id:4,name:'rad-lg', min:12, max:20},
+    {id:5,name:'rad-xl', min:20, max:32},
+    {id:6,name:'rad-full',min:50, max:999},
+  ],
+  shadow:[
+    {id:1,name:'shd-xs', min:1,  max:2},
+    {id:2,name:'shd-sm', min:2,  max:4},
+    {id:3,name:'shd-md', min:4,  max:8},
+    {id:4,name:'shd-lg', min:8,  max:16},
+    {id:5,name:'shd-xl', min:16, max:32},
+    {id:6,name:'shd-2xl',min:24, max:48},
+  ],
+};
+let paddingSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.padding));
+let marginSizes =JSON.parse(JSON.stringify(defaultSpacingSizes.margin));
+let gapSizes    =JSON.parse(JSON.stringify(defaultSpacingSizes.gap));
+let radiusSizes =JSON.parse(JSON.stringify(defaultSpacingSizes.radius));
+let shadowSizes =JSON.parse(JSON.stringify(defaultSpacingSizes.shadow));
+
+const defaultClassSizes=[
+  {id:1,name:'xxxlarge',min:42,max:52,lineHeight:1.3},
+  {id:2,name:'xxlarge', min:36,max:44,lineHeight:1.3},
+  {id:3,name:'xlarge',  min:30,max:36,lineHeight:1.3},
+  {id:4,name:'large',   min:24,max:28,lineHeight:1.3},
+  {id:5,name:'medium',  min:18,max:20,lineHeight:1.3},
+  {id:6,name:'normal',  min:16,max:16,lineHeight:1.3},
+  {id:7,name:'small',   min:15,max:15,lineHeight:1.3},
+  {id:8,name:'xsmall',  min:14,max:14,lineHeight:1.3},
+];
+const defaultTagSizes=[
+  {id:1,name:'h1',min:36,max:48,lineHeight:1.2},
+  {id:2,name:'h2',min:30,max:40,lineHeight:1.2},
+  {id:3,name:'h3',min:24,max:32,lineHeight:1.3},
+  {id:4,name:'h4',min:20,max:28,lineHeight:1.3},
+  {id:5,name:'h5',min:18,max:24,lineHeight:1.4},
+  {id:6,name:'h6',min:16,max:20,lineHeight:1.4},
+  {id:7,name:'p', min:14,max:18,lineHeight:1.65},
+];
+
+let classSizes=JSON.parse(JSON.stringify(defaultClassSizes));
+let tagSizes  =JSON.parse(JSON.stringify(defaultTagSizes));
+let scaleSizes=[];
+
+// persistence
+function saveState(){
+  try{localStorage.setItem('fcc_state',JSON.stringify({activeTab,unitType,rootSize,minViewport,maxViewport,scalePMin,scalePMax,scaleRatioMin,scaleRatioMax,scaleLH,selectedId,classSizes,tagSizes,paddingSizes,marginSizes,gapSizes,radiusSizes,shadowSizes,nextId}))}catch(e){}
+}
+function loadState(){
+  try{
+    const s=localStorage.getItem('fcc_state');if(!s)return;const d=JSON.parse(s);
+    if(d.activeTab!==undefined)activeTab=d.activeTab;
+    if(d.unitType!==undefined)unitType=d.unitType;
+    if(d.rootSize!==undefined)rootSize=d.rootSize;
+    if(d.minViewport!==undefined)minViewport=d.minViewport;
+    if(d.maxViewport!==undefined)maxViewport=d.maxViewport;
+    if(d.scalePMin!==undefined)scalePMin=d.scalePMin;
+    if(d.scalePMax!==undefined)scalePMax=d.scalePMax;
+    if(d.scaleRatioMin!==undefined)scaleRatioMin=d.scaleRatioMin;
+    if(d.scaleRatioMax!==undefined)scaleRatioMax=d.scaleRatioMax;
+    if(d.scaleLH!==undefined)scaleLH=d.scaleLH;
+    if(d.selectedId!==undefined)selectedId=d.selectedId;
+    if(d.classSizes!==undefined)classSizes=d.classSizes;
+    if(d.tagSizes!==undefined)tagSizes=d.tagSizes;
+    if(d.nextId!==undefined)nextId=d.nextId;
+    // Strip legacy -- prefix from spacing names when loading from old localStorage
+    function stripDash(arr){return(arr||[]).map(s=>({...s,name:s.name.startsWith('--')?s.name.slice(2):s.name}))}
+    if(d.paddingSizes!==undefined)paddingSizes=stripDash(d.paddingSizes);
+    if(d.marginSizes!==undefined)marginSizes=stripDash(d.marginSizes);
+    if(d.gapSizes!==undefined)gapSizes=stripDash(d.gapSizes);
+    if(d.radiusSizes!==undefined)radiusSizes=stripDash(d.radiusSizes);
+    if(d.shadowSizes!==undefined)shadowSizes=stripDash(d.shadowSizes);
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════
+// CSS GENERATION
+// ═══════════════════════════════════════════════════════════
+function calculateClamp(minPx,maxPx,minVP,maxVP){
+  const slope=(maxPx-minPx)/(maxVP-minVP);
+  const yi=minPx-slope*minVP;
+  const slopeVw=slope*100;
+  const minRem=(minPx/rootSize).toFixed(2);
+  const maxRem=(maxPx/rootSize).toFixed(2);
+  const yiRem=yi/rootSize;
+  const sign=yiRem>=0?'+':'-';
+  return `clamp(${minRem}rem, ${slopeVw.toFixed(5)}vw ${sign} ${Math.abs(yiRem).toFixed(5)}rem, ${maxRem}rem)`;
+}
+function generateCSSForSize(size){
+  const clamp=calculateClamp(size.min,size.max,minViewport,maxViewport);
+  const lh=(size.lineHeight||1.4).toFixed(2);
+  if(activeTab==='class')
+    return `:is(.${size.name} :is(h1,h2,h3,h4,h5,h6,p,a,span,button,div,li),.${size.name}:is(.e-heading-base,.e-paragraph-base,.e-button-base)){\n  font-size: ${clamp};\n  line-height: ${lh};\n}`;
+  return `${size.name} {\n  font-size: ${clamp};\n  line-height: ${lh};\n}`;
+}
+function generateAllCSS(){
+  if(isSpacingTab())return generateAllSpacingCSS();
+  const sizes=getActiveSizes();
+  if(!sizes.length)return`/* No ${activeTab} sizes defined */`;
+  return `html { font-size: ${rootSize}px; } /* root size */\n\n`+sizes.map(generateCSSForSize).join('\n\n');
+}
+
+// spacing CSS generator — names are stored without --, we add -- in CSS output
+function cssVarName(name){ return name.startsWith('--') ? name : `--${name}`; }
+function generateCSSForSpacing(size){
+  const clamp=calculateClamp(size.min,size.max,minViewport,maxViewport);
+  return `${cssVarName(size.name)}: ${clamp};`;
+}
+function generateAllSpacingCSS(){
+  const sizes=getActiveSizes();
+  if(!sizes.length)return`/* No ${activeTab} sizes defined */`;
+  const prop=activeTab==='padding'?'padding':activeTab==='margin'?'margin':'gap';
+  let code=`:root {\n`;
+  code+=sizes.map(s=>`  /* ${displayVal(s.min)}${unitType} → ${displayVal(s.max)}${unitType} */\n  ${generateCSSForSpacing(s)}`).join('\n');
+  code+=`\n}\n`;
+  code+=`\n/* ─── Usage Examples ────────────────────── */\n`;
+  if(activeTab==='padding'){
+    const xs=cssVarName(sizes[0]?.name||'pad-xs'), sm=cssVarName(sizes[1]?.name||'pad-sm'), md=cssVarName(sizes[2]?.name||'pad-md'), lg=cssVarName(sizes[3]?.name||'pad-lg'), xl=cssVarName(sizes[4]?.name||'pad-xl');
+    code+=`.btn        { padding: var(${xs}) var(${sm}); }\n`;
+    code+=`.card       { padding: var(${md}); }\n`;
+    code+=`.section    { padding-block: var(${xl}); }\n`;
+    code+=`.container  { padding-inline: var(${lg}); }`;
+  } else if(activeTab==='margin'){
+    const xs=cssVarName(sizes[0]?.name||'mar-xs'), sm=cssVarName(sizes[1]?.name||'mar-sm'), md=cssVarName(sizes[2]?.name||'mar-md'), lg=cssVarName(sizes[3]?.name||'mar-lg'), xl=cssVarName(sizes[4]?.name||'mar-xl');
+    code+=`.heading    { margin-bottom: var(${xs}); }\n`;
+    code+=`.card       { margin-bottom: var(${md}); }\n`;
+    code+=`.section    { margin-block: var(${xl}); }\n`;
+    code+=`.centered   { margin-inline: auto; margin-block: var(${lg}); }`;
+  } else if(activeTab==='radius'){
+    const xs=cssVarName(sizes[0]?.name||'rad-xs'), sm=cssVarName(sizes[1]?.name||'rad-sm'), md=cssVarName(sizes[2]?.name||'rad-md'), lg=cssVarName(sizes[3]?.name||'rad-lg'), xl=cssVarName(sizes[4]?.name||'rad-xl'), full=cssVarName(sizes[5]?.name||'rad-full');
+    code+=`.btn        { border-radius: var(${sm}); }\n`;
+    code+=`.card       { border-radius: var(${md}); }\n`;
+    code+=`.input      { border-radius: var(${xs}); }\n`;
+    code+=`.pill       { border-radius: var(${full}); }\n`;
+    code+=`.modal      { border-radius: var(${lg}); }`;
+  } else if(activeTab==='shadow'){
+    const xs=cssVarName(sizes[0]?.name||'shd-xs'), sm=cssVarName(sizes[1]?.name||'shd-sm'), md=cssVarName(sizes[2]?.name||'shd-md'), lg=cssVarName(sizes[3]?.name||'shd-lg'), xl=cssVarName(sizes[4]?.name||'shd-xl');
+    code+=`.btn        { box-shadow: 0 var(${xs}) calc(var(${xs})*2) rgba(0,0,0,.15); }\n`;
+    code+=`.card       { box-shadow: 0 var(${sm}) calc(var(${sm})*2) rgba(0,0,0,.12); }\n`;
+    code+=`.modal      { box-shadow: 0 var(${md}) calc(var(${md})*2) rgba(0,0,0,.2); }\n`;
+    code+=`.dropdown   { box-shadow: 0 var(${lg}) calc(var(${lg})*2) rgba(0,0,0,.25); }`;
+  } else {
+    const xs=cssVarName(sizes[0]?.name||'gap-xs'), sm=cssVarName(sizes[1]?.name||'gap-sm'), md=cssVarName(sizes[2]?.name||'gap-md'), lg=cssVarName(sizes[3]?.name||'gap-lg');
+    code+=`.flex-nav   { display: flex; gap: var(${xs}); }\n`;
+    code+=`.card-grid  { display: grid; gap: var(${md}); }\n`;
+    code+=`.layout     { display: grid; column-gap: var(${lg}); row-gap: var(${sm}); }`;
+  }
+  return code;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCALE
+// ═══════════════════════════════════════════════════════════
+function buildScaleSizes(){
+  scaleSizes=[];
+  const tags=['h1','h2','h3','h4','h5','h6','p'];
+  tags.forEach((tag,i)=>{
+    let minPx,maxPx;
+    if(tag==='p'){minPx=scalePMin;maxPx=scalePMax;}
+    else{const lv=6-i;minPx=scalePMin*Math.pow(scaleRatioMin,lv);maxPx=scalePMax*Math.pow(scaleRatioMax,lv);}
+    scaleSizes.push({id:i+1,name:tag,min:minPx,max:maxPx,lineHeight:scaleLH});
+  });
+}
+function getActiveSizes(){
+  if(activeTab==='class')return classSizes;
+  if(activeTab==='tag')return tagSizes;
+  if(activeTab==='scale')return scaleSizes;
+  if(activeTab==='padding')return paddingSizes;
+  if(activeTab==='margin')return marginSizes;
+  if(activeTab==='gap')return gapSizes;
+  if(activeTab==='radius')return radiusSizes;
+  if(activeTab==='shadow')return shadowSizes;
+  return [];
+}
+function getSelectedId(){return selectedId[activeTab]}
+function setSelectedId(id){selectedId[activeTab]=id}
+
+// ═══════════════════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const tabBtns=document.querySelectorAll('.tab-btn');
+const unitBtns=document.querySelectorAll('.unit-btn');
+const rootSizeIn=$('root-size'),minVpIn=$('min-viewport'),maxVpIn=$('max-viewport');
+const scalePMinIn=$('scale-p-min'),scalePMaxIn=$('scale-p-max');
+const scaleRMinIn=$('scale-ratio-min'),scaleRMaxIn=$('scale-ratio-max'),scaleLHIn=$('scale-line-height');
+const sizesList=$('sizes-list'),previewList=$('preview-list');
+const selectedCode=$('selected-code'),allCode=$('all-code');
+const vpSlider=$('vp-slider'),vpVal=$('vp-val');
+const modalOverlay=$('modal-overlay'),modalName=$('modal-name'),modalMin=$('modal-min'),modalMax=$('modal-max'),modalLH=$('modal-lh');
+const copyFlash=$('copy-flash');
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render(){
+  if(activeTab==='scale')buildScaleSizes();
+  renderTabs();renderSizes();renderPreviews();renderCode();updateInputs();
+}
+function renderTabs(){
+  tabBtns.forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
+  unitBtns.forEach(b=>b.classList.toggle('active',b.dataset.unit===unitType));
+  $('scale-settings').classList.toggle('visible',activeTab==='scale');
+  const disableAdd=activeTab==='scale';
+  ['btn-add','btn-clear'].forEach(id=>{$(id).disabled=disableAdd;$(id).style.opacity=disableAdd?'.35':'1'});
+  const T={
+    class:  {s:'Font Size Classes',   sel:'Selected Class CSS',    all:'All Classes CSS',    col:'Class',  lh:'Line Height'},
+    tag:    {s:'Font Size Tags',      sel:'Selected Tag CSS',      all:'All Tags CSS',       col:'Tag',    lh:'Line Height'},
+    scale:  {s:'Scale Sizes',        sel:'Selected Scale CSS',    all:'All Scale CSS',      col:'Tag',    lh:'Line Height'},
+    padding:{s:'Padding Tokens',     sel:'Selected Padding CSS',  all:'All Padding CSS',    col:'Token',  lh:'Property'},
+    margin: {s:'Margin Tokens',      sel:'Selected Margin CSS',   all:'All Margin CSS',     col:'Token',  lh:'Property'},
+    gap:    {s:'Gap Tokens',         sel:'Selected Gap CSS',      all:'All Gap CSS',        col:'Token',  lh:'Property'},
+    radius: {s:'Border Radius Tokens',sel:'Selected Radius CSS',  all:'All Radius CSS',     col:'Token',  lh:'Property'},
+    shadow: {s:'Box Shadow Tokens',  sel:'Selected Shadow CSS',   all:'All Shadow CSS',     col:'Token',  lh:'Property'},
+  }[activeTab]||{s:'',sel:'',all:'',col:'Token',lh:'Property'};
+  $('sizes-title').textContent=T.s;
+  $('selected-code-title').textContent=T.sel;
+  $('all-code-title').textContent=T.all;
+  $('name-col-header').textContent=T.col;
+  // 4th info cell label
+  const lhLabel=$('info-lh-label');
+  if(lhLabel) lhLabel.textContent=T.lh;
+  // Hide line-height column for spacing
+  const lhHeader=$('lh-col-header');
+  if(lhHeader)lhHeader.style.visibility=isSpacingTab()?'hidden':'visible';
+  // Hide/show info-lh cell
+  const lhCell=$('info-lh-cell');
+  if(lhCell){
+    lhCell.style.display=isSpacingTab()?'flex':'';
+    const lhVal=$('info-lh');
+    if(isSpacingTab()&&lhVal){
+      const prop=activeTab==='padding'?'padding':activeTab==='margin'?'margin':'gap';
+      lhVal.textContent=prop;
+      lhVal.style.color='var(--text3)';
+      lhVal.style.fontSize='10px';
+    } else if(lhVal){
+      lhVal.style.color='';
+      lhVal.style.fontSize='';
+    }
+  }
+}
+function displayVal(px){return unitType==='px'?px.toFixed(1):(px/rootSize).toFixed(2)}
+function getSpacingArr(){
+  if(activeTab==='padding')return paddingSizes;
+  if(activeTab==='margin')return marginSizes;
+  if(activeTab==='gap')return gapSizes;
+  if(activeTab==='radius')return radiusSizes;
+  if(activeTab==='shadow')return shadowSizes;
+  return gapSizes;
+}
+function renderSizes(){
+  const sizes=getActiveSizes(),selId=getSelectedId();
+  if(!sizes.length){sizesList.innerHTML='<div class="empty">No sizes. Click + Add.</div>';return}
+  sizesList.innerHTML='';
+  sizes.forEach(size=>{
+    const isScNP=activeTab==='scale'&&size.name!=='p';
+    const row=document.createElement('div');
+    row.className='size-row'+(size.id===selId?' selected':'');
+    row.dataset.id=size.id;row.draggable=!isScNP;
+    const lhVal=isSpacingTab()?'':`<div class="size-val">${(size.lineHeight||1.4).toFixed(1)}</div>`;
+    row.innerHTML=`<div class="drag-handle" style="${isScNP?'opacity:0':''}">⋮⋮</div>
+      <div class="size-name">${size.name}</div>
+      <div class="size-val">${displayVal(size.min)}</div>
+      <div class="size-val">${displayVal(size.max)}</div>
+      ${lhVal}
+      <div class="size-actions">
+        <button class="icon-btn edit" title="Edit" ${isScNP?'style="opacity:0;pointer-events:none"':''}>✎</button>
+        <button class="icon-btn del"  title="Delete" ${isScNP?'style="opacity:0;pointer-events:none"':''}>✕</button>
+      </div>`;
+    row.addEventListener('click',e=>{if(e.target.closest('.icon-btn'))return;setSelectedId(size.id);saveState();render()});
+    row.querySelector('.edit').addEventListener('click',e=>{e.stopPropagation();openModal(size.id)});
+    row.querySelector('.del').addEventListener('click',e=>{
+      e.stopPropagation();
+      if(!confirm(`Delete "${size.name}"?`))return;
+      const arr=isSpacingTab()?getSpacingArr():(activeTab==='class'?classSizes:tagSizes);
+      const i=arr.findIndex(s=>s.id===size.id);if(i!==-1)arr.splice(i,1);
+      if(getSelectedId()===size.id)setSelectedId(arr.length?arr[0].id:null);
+      saveState();render();
+    });
+    if(!isScNP){
+      row.addEventListener('dragstart',e=>{row.classList.add('dragging');e.dataTransfer.setData('text/plain',String(size.id))});
+      row.addEventListener('dragend',()=>{row.classList.remove('dragging');sizesList.querySelectorAll('.size-row').forEach(r=>r.classList.remove('drag-over'))});
+      row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over')});
+      row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+      row.addEventListener('drop',e=>{
+        e.preventDefault();
+        const arr=isSpacingTab()?getSpacingArr():(activeTab==='class'?classSizes:tagSizes);
+        const fi=arr.findIndex(s=>s.id===parseInt(e.dataTransfer.getData('text/plain')));
+        const ti=arr.findIndex(s=>s.id===size.id);
+        if(fi!==-1&&ti!==-1){const[it]=arr.splice(fi,1);arr.splice(ti,0,it);}
+        sizesList.querySelectorAll('.size-row').forEach(r=>r.classList.remove('drag-over'));
+        saveState();render();
+      });
+    }
+    sizesList.appendChild(row);
+  });
+}
+function renderPreviews(){
+  const sizes=getActiveSizes(),selId=getSelectedId();
+  const vp=parseInt(vpSlider.value);
+  vpVal.textContent=vp+'px';vpSlider.min=minViewport;
+  const fontInputWrap=$('font-url-wrap');
+  if(fontInputWrap) fontInputWrap.style.display=isSpacingTab()?'none':'flex';
+  previewList.innerHTML='';
+
+  if(isSpacingTab()||activeTab==='radius'||activeTab==='shadow'){
+    const t=Math.max(0,Math.min(1,(vp-minViewport)/(maxViewport-minViewport)));
+    const colMap={
+      padding:{ accent:'#3b82f6', dim:'rgba(59,130,246,0.10)', bright:'rgba(59,130,246,0.22)' },
+      margin: { accent:'#fbbf24', dim:'rgba(251,191,36,0.10)',  bright:'rgba(251,191,36,0.22)' },
+      gap:    { accent:'#4ade80', dim:'rgba(74,222,128,0.10)',  bright:'rgba(74,222,128,0.22)' },
+      radius: { accent:'#a78bfa', dim:'rgba(167,139,250,0.10)', bright:'rgba(167,139,250,0.22)' },
+      shadow: { accent:'#f472b6', dim:'rgba(244,114,182,0.10)', bright:'rgba(244,114,182,0.22)' },
+    };
+    const col=colMap[activeTab]||colMap.padding;
+
+    sizes.forEach(size=>{
+      const curPx = size.min + t*(size.max - size.min);
+      const CAP=120;
+      const visCur=Math.min(curPx,CAP);
+      const visMin=Math.min(size.min,CAP);
+      const visMax=Math.min(size.max,CAP);
+
+      const item=document.createElement('div');
+      item.className='preview-item'+(size.id===selId?' selected':'');
+      item.style.cssText='padding:10px 12px;';
+
+      const nameStr=size.name;
+      const rangeLabel=`${displayVal(size.min)}–${displayVal(size.max)}${unitType}`;
+
+      // ── Padding: dashed box with inner content ──────────────────────
+      if(activeTab==='padding'){
+        const mkBox=(vis,isCur)=>`
+          <div style="border:1px dashed ${col.accent};border-radius:4px;
+            background:${isCur?col.bright:col.dim};
+            padding:${vis}px;box-sizing:border-box;
+            opacity:${isCur?1:0.45};transition:opacity .15s;">
+            <div style="background:${isCur?'var(--surface)':'var(--surface3)'};border-radius:2px;height:10px;
+              ${isCur?'border:1px solid var(--border);':''};
+              display:flex;align-items:center;justify-content:center;">
+              ${isCur?`<span style="font-size:7px;color:var(--text3);font-family:var(--mono);">content</span>`:''}
+            </div>
+          </div>`;
+        item.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:var(--mono);font-weight:700;font-size:12px;color:${col.accent};">${nameStr}</span>
+            <div style="text-align:right;">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${col.accent};line-height:1;">${curPx.toFixed(1)}</span>
+              <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">px · ${(curPx/rootSize).toFixed(2)}rem</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;align-items:end;">
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">min · ${displayVal(size.min)}${unitType}</div>
+              ${mkBox(visMin,false)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col.accent};font-family:var(--mono);margin-bottom:3px;">▶ now · ${curPx.toFixed(1)}px</div>
+              ${mkBox(visCur,true)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">max · ${displayVal(size.max)}${unitType}</div>
+              ${mkBox(visMax,false)}
+            </div>
+          </div>`;
+
+      // ── Margin: dashed outer space around inner element ─────────────
+      }else if(activeTab==='margin'){
+        const mkBox=(vis,isCur)=>`
+          <div style="padding:${vis}px;background:${isCur?col.bright:col.dim};
+            border:1px dashed ${col.accent};border-radius:4px;box-sizing:border-box;
+            opacity:${isCur?1:0.45};transition:opacity .15s;">
+            <div style="background:${isCur?'var(--surface)':'var(--surface3)'};border-radius:2px;height:10px;
+              ${isCur?'border:1px solid var(--border);':''};
+              display:flex;align-items:center;justify-content:center;">
+              ${isCur?`<span style="font-size:7px;color:var(--text3);font-family:var(--mono);">element</span>`:''}
+            </div>
+          </div>`;
+        item.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:var(--mono);font-weight:700;font-size:12px;color:${col.accent};">${nameStr}</span>
+            <div style="text-align:right;">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${col.accent};line-height:1;">${curPx.toFixed(1)}</span>
+              <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">px · ${(curPx/rootSize).toFixed(2)}rem</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;align-items:end;">
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">min · ${displayVal(size.min)}${unitType}</div>
+              ${mkBox(visMin,false)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col.accent};font-family:var(--mono);margin-bottom:3px;">▶ now · ${curPx.toFixed(1)}px</div>
+              ${mkBox(visCur,true)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">max · ${displayVal(size.max)}${unitType}</div>
+              ${mkBox(visMax,false)}
+            </div>
+          </div>`;
+
+      // ── Gap: two boxes with space between ──────────────────────────
+      }else if(activeTab==='gap'){
+        const mkGap=(vis,isCur)=>`
+          <div style="display:flex;gap:${vis}px;height:28px;opacity:${isCur?1:0.45};transition:opacity .15s;">
+            <div style="flex:1;background:${isCur?col.bright:col.dim};border:${isCur?'1.5px':'1px'} solid ${col.accent};border-radius:3px;"></div>
+            <div style="flex:1;background:${isCur?col.bright:col.dim};border:${isCur?'1.5px':'1px'} solid ${col.accent};border-radius:3px;"></div>
+          </div>`;
+        item.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:var(--mono);font-weight:700;font-size:12px;color:${col.accent};">${nameStr}</span>
+            <div style="text-align:right;">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${col.accent};line-height:1;">${curPx.toFixed(1)}</span>
+              <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">px · ${(curPx/rootSize).toFixed(2)}rem</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;align-items:center;">
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">min · ${displayVal(size.min)}${unitType}</div>
+              ${mkGap(visMin,false)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col.accent};font-family:var(--mono);margin-bottom:3px;">▶ now · ${curPx.toFixed(1)}px</div>
+              ${mkGap(visCur,true)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">max · ${displayVal(size.max)}${unitType}</div>
+              ${mkGap(visMax,false)}
+            </div>
+          </div>`;
+
+      // ── Radius: rounded box ─────────────────────────────────────────
+      }else if(activeTab==='radius'){
+        const mkRad=(vis,isCur)=>`
+          <div style="height:36px;background:${isCur?col.bright:col.dim};
+            border:${isCur?'1.5px':'1px'} solid ${col.accent};
+            border-radius:${vis}px;opacity:${isCur?1:0.45};transition:opacity .15s;"></div>`;
+        item.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:var(--mono);font-weight:700;font-size:12px;color:${col.accent};">${nameStr}</span>
+            <div style="text-align:right;">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${col.accent};line-height:1;">${curPx.toFixed(1)}</span>
+              <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">px · ${(curPx/rootSize).toFixed(2)}rem</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;align-items:center;">
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">min · ${displayVal(size.min)}${unitType}</div>
+              ${mkRad(visMin,false)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col.accent};font-family:var(--mono);margin-bottom:3px;">▶ now · ${curPx.toFixed(1)}px</div>
+              ${mkRad(visCur,true)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">max · ${displayVal(size.max)}${unitType}</div>
+              ${mkRad(visMax,false)}
+            </div>
+          </div>`;
+
+      // ── Shadow: box with actual box-shadow ──────────────────────────
+      }else if(activeTab==='shadow'){
+        const mkShadow=(vis,isCur)=>`
+          <div style="height:32px;background:${isCur?'var(--surface)':'var(--surface2)'};
+            border-radius:4px;border:1px solid var(--border);
+            box-shadow:0 ${vis}px ${vis*2}px rgba(0,0,0,${isCur?0.35:0.15});
+            opacity:${isCur?1:0.45};margin:${Math.min(vis,8)}px;transition:opacity .15s;"></div>`;
+        item.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:var(--mono);font-weight:700;font-size:12px;color:${col.accent};">${nameStr}</span>
+            <div style="text-align:right;">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${col.accent};line-height:1;">${curPx.toFixed(1)}</span>
+              <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">px · ${(curPx/rootSize).toFixed(2)}rem</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;align-items:center;">
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">min · ${displayVal(size.min)}${unitType}</div>
+              ${mkShadow(visMin,false)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col.accent};font-family:var(--mono);margin-bottom:3px;">▶ now · ${curPx.toFixed(1)}px</div>
+              ${mkShadow(visCur,true)}
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;opacity:.6;">max · ${displayVal(size.max)}${unitType}</div>
+              ${mkShadow(visMax,false)}
+            </div>
+          </div>`;
+      }
+
+      item.addEventListener('click',()=>{setSelectedId(size.id);saveState();render()});
+      previewList.appendChild(item);
+    });
+    return;
+  }
+
+  // ── FONT PREVIEW (class / tag / scale) ──────────────────────────
+  sizes.forEach(size=>{
+    const isP=activeTab!=='class'&&size.name==='p';
+    const t=Math.max(0,Math.min(1,(vp-minViewport)/(maxViewport-minViewport)));
+    const cur=(size.min+t*(size.max-size.min)).toFixed(1);
+    const item=document.createElement('div');
+    item.className='preview-item'+(size.id===selId?' selected':'');
+    item.innerHTML=`<div class="preview-item-label">${size.name} · ${displayVal(size.min)}–${displayVal(size.max)}${unitType} · lh ${(size.lineHeight||1.4).toFixed(1)}</div>
+      <div class="preview-sizes">
+        <div class="preview-half"><div class="preview-text-el${isP?' p-tag':''}" style="font-size:${size.min}px;line-height:${size.lineHeight||1.4}">${size.name}</div></div>
+        <div class="preview-divider"></div>
+        <div class="preview-half c"><div class="preview-text-el${isP?' p-tag':''}" style="font-size:${cur}px;line-height:${size.lineHeight||1.4}">${size.name}</div></div>
+        <div class="preview-divider"></div>
+        <div class="preview-half"><div class="preview-text-el${isP?' p-tag':''}" style="font-size:${size.max}px;line-height:${size.lineHeight||1.4}">${size.name}</div></div>
+      </div>`;
+    item.addEventListener('click',()=>{setSelectedId(size.id);saveState();render()});
+    previewList.appendChild(item);
+  });
+}
+function renderCode(){
+  const sizes=getActiveSizes(),sel=sizes.find(s=>s.id===getSelectedId());
+
+  // ── Selected name badge ──────────────────────────────────
+  const nameBadge=$('sel-name-badge');
+  if(nameBadge){
+    if(sel){
+      // Always strip any -- prefix from stored name for display
+      const cleanName=sel.name.startsWith('--')?sel.name.slice(2):sel.name;
+      let displayName=cleanName;
+      // tag/scale/spacing: just clean name as-is, no prefix
+      nameBadge.textContent=displayName;
+      nameBadge.style.opacity='1';
+    } else {
+      nameBadge.textContent='select a size';
+      nameBadge.style.opacity='0.45';
+    }
+  }
+  if(isSpacingTab()){
+    if(sel){
+      const prop=activeTab==='padding'?'padding':activeTab==='margin'?'margin':'gap';
+      const varN=cssVarName(sel.name);
+      const clamp=calculateClamp(sel.min,sel.max,minViewport,maxViewport);
+      selectedCode.textContent=`/* ─── ${varN} ─────────────────────── */\n/* Range: ${displayVal(sel.min)}${unitType} → ${displayVal(sel.max)}${unitType} */\n\n:root {\n  ${varN}: ${clamp};\n}\n\n/* Usage */\n.element { ${prop}: var(${varN}); }\n.element { ${prop}-block: var(${varN}); }\n.element { ${prop}-inline: var(${varN}); }`;
+    } else {
+      selectedCode.textContent='/* Select a token */';
+    }
+  } else {
+    selectedCode.textContent=sel?generateCSSForSize(sel):'/* Select a size */';
+  }
+  allCode.textContent=generateAllCSS();
+  if(sel){
+    const slope=(sel.max-sel.min)/(maxViewport-minViewport);
+    // Respect unit toggle for min/max display
+    if(unitType==='rem'){
+      $('info-min').textContent=(sel.min/rootSize).toFixed(2)+'rem';
+      $('info-max').textContent=(sel.max/rootSize).toFixed(2)+'rem';
+    } else {
+      $('info-min').textContent=sel.min.toFixed(1)+'px';
+      $('info-max').textContent=sel.max.toFixed(1)+'px';
+    }
+    $('info-slope').textContent=(slope*100).toFixed(4)+'vw';
+    const lhEl=$('info-lh');
+    if(lhEl){
+      if(isSpacingTab()){
+        const prop=activeTab==='padding'?'padding':activeTab==='margin'?'margin':'gap';
+        lhEl.textContent=prop;
+        lhEl.style.color='var(--text3)';lhEl.style.fontSize='11px';
+      } else {
+        lhEl.textContent=(sel.lineHeight||1.4).toFixed(2);
+        lhEl.style.color='';lhEl.style.fontSize='';
+      }
+    }
+    $('clamp-value-display').textContent=calculateClamp(sel.min,sel.max,minViewport,maxViewport);
+  }else{
+    ['info-min','info-max','info-slope','clamp-value-display'].forEach(id=>{const el=$(id);if(el)el.textContent='—'});
+    const lhEl=$('info-lh');if(lhEl){lhEl.textContent='—';lhEl.style.color='';lhEl.style.fontSize=''}
+  }
+}
+function updateInputs(){
+  rootSizeIn.value=rootSize;minVpIn.value=minViewport;maxVpIn.value=maxViewport;
+  scalePMinIn.value=unitType==='px'?scalePMin:(scalePMin/rootSize).toFixed(2);
+  scalePMaxIn.value=unitType==='px'?scalePMax:(scalePMax/rootSize).toFixed(2);
+  scaleRMinIn.value=scaleRatioMin;scaleRMaxIn.value=scaleRatioMax;scaleLHIn.value=scaleLH;
+  const unitLabel=isSpacingTab()?`Min Space (${unitType})`:`Min Size (${unitType})`;
+  const unitLabel2=isSpacingTab()?`Max Space (${unitType})`:`Max Size (${unitType})`;
+  $('modal-min-label').textContent=unitLabel;
+  $('modal-max-label').textContent=unitLabel2;
+  // Update modal name label
+  const modalNameLbl=$('modal-name-label');
+  if(modalNameLbl) modalNameLbl.textContent=isSpacingTab()?'Token Name (CSS var)':'Name';
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════
+function openModal(id){
+  const sizes=getActiveSizes(),size=sizes.find(s=>s.id===id);
+  if(!size||(activeTab==='scale'&&size.name!=='p'))return;
+  editingId=id;
+  modalName.value=size.name;
+  modalName.disabled=activeTab==='scale';
+  modalMin.value=displayVal(size.min);
+  modalMax.value=displayVal(size.max);
+  modalLH.value=(size.lineHeight||1.4).toFixed(1);
+  // Hide LH field for spacing tabs
+  const lhRow=$('modal-lh-row');
+  if(lhRow)lhRow.style.display=isSpacingTab()?'none':'';
+  $('modal-title').textContent=`Edit "${size.name}"`;
+  modalOverlay.classList.add('open');
+  modalName.focus();
+}
+function closeModal(){modalOverlay.classList.remove('open');editingId=null}
+function saveModal(){
+  let sizes;
+  if(activeTab==='class')sizes=classSizes;
+  else if(activeTab==='tag')sizes=tagSizes;
+  else if(activeTab==='scale')sizes=scaleSizes;
+  else sizes=getSpacingArr();
+  const idx=sizes.findIndex(s=>s.id===editingId);if(idx===-1)return;
+  const minVal=parseFloat(modalMin.value)||0,maxVal=parseFloat(modalMax.value)||0,lhVal=parseFloat(modalLH.value)||1.4,name=modalName.value.trim();
+  if(!name||minVal<=0||maxVal<=0)return;
+  if(activeTab!=='scale')sizes[idx].name=name;
+  sizes[idx].min=unitType==='px'?minVal:minVal*rootSize;
+  sizes[idx].max=unitType==='px'?maxVal:maxVal*rootSize;
+  if(!isSpacingTab())sizes[idx].lineHeight=lhVal;
+  if(activeTab==='scale'&&sizes[idx].name==='p'){scalePMin=sizes[idx].min;scalePMax=sizes[idx].max;scaleLH=lhVal}
+  closeModal();saveState();render();
+}
+
+// ═══════════════════════════════════════════════════════════
+// COPY
+// ═══════════════════════════════════════════════════════════
+function copyText(text){
+  navigator.clipboard.writeText(text).catch(()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t)});
+  copyFlash.classList.add('show');setTimeout(()=>copyFlash.classList.remove('show'),1800);
+}
+function getClampValue(){const sel=getActiveSizes().find(s=>s.id===getSelectedId());return sel?calculateClamp(sel.min,sel.max,minViewport,maxViewport):null}
+
+// ═══════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════
+tabBtns.forEach(b=>b.addEventListener('click',()=>{activeTab=b.dataset.tab;saveState();render()}));
+unitBtns.forEach(b=>b.addEventListener('click',()=>{unitType=b.dataset.unit;saveState();render()}));
+rootSizeIn.addEventListener('input',()=>{rootSize=parseFloat(rootSizeIn.value)||16;saveState();render()});
+minVpIn.addEventListener('input',()=>{minViewport=parseFloat(minVpIn.value)||375;vpSlider.min=minViewport;saveState();render()});
+maxVpIn.addEventListener('input',()=>{maxViewport=parseFloat(maxVpIn.value)||1100;saveState();render()});
+scalePMinIn.addEventListener('input',()=>{scalePMin=unitType==='px'?parseFloat(scalePMinIn.value)||16:(parseFloat(scalePMinIn.value)||1)*rootSize;saveState();render()});
+scalePMaxIn.addEventListener('input',()=>{scalePMax=unitType==='px'?parseFloat(scalePMaxIn.value)||16:(parseFloat(scalePMaxIn.value)||1)*rootSize;saveState();render()});
+scaleRMinIn.addEventListener('input',()=>{scaleRatioMin=parseFloat(scaleRMinIn.value)||1.333;saveState();render()});
+scaleRMaxIn.addEventListener('input',()=>{scaleRatioMax=parseFloat(scaleRMaxIn.value)||1.4;saveState();render()});
+scaleLHIn.addEventListener('input',()=>{scaleLH=parseFloat(scaleLHIn.value)||1.4;saveState();render()});
+vpSlider.addEventListener('input',()=>{
+  syncPresetButtons(parseInt(vpSlider.value));
+  renderPreviews();
+});
+
+// Viewport preset buttons
+function syncPresetButtons(vp){
+  document.querySelectorAll('.vp-preset-btn').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.dataset.vp)===vp);
+  });
+}
+document.querySelectorAll('.vp-preset-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const vp=parseInt(b.dataset.vp);
+    vpSlider.value=vp;
+    syncPresetButtons(vp);
+    renderPreviews();
+  });
+});
+
+$('btn-add').addEventListener('click',()=>{
+  if(activeTab==='scale')return;
+  const id=nextId[activeTab]++;
+  let ns;
+  if(isSpacingTab()){
+    const pfx=activeTab==='padding'?'pad':activeTab==='margin'?'mar':activeTab==='gap'?'gap':activeTab==='radius'?'rad':'shd';
+    ns={id,name:`${pfx}-custom${id}`,min:8,max:24};
+    getSpacingArr().push(ns);
+  } else {
+    ns=activeTab==='class'?{id,name:`custom-${id}`,min:16,max:24,lineHeight:1.4}:{id,name:`custom${id}`,min:16,max:24,lineHeight:1.4};
+    if(activeTab==='class')classSizes.push(ns);else tagSizes.push(ns);
+  }
+  setSelectedId(id);saveState();render();openModal(id);
+});
+$('btn-reset').addEventListener('click',()=>{
+  if(!confirm('Reset to defaults?'))return;
+  if(activeTab==='class'){classSizes=JSON.parse(JSON.stringify(defaultClassSizes));selectedId.class=6;nextId.class=9}
+  else if(activeTab==='tag'){tagSizes=JSON.parse(JSON.stringify(defaultTagSizes));selectedId.tag=1;nextId.tag=8}
+  else if(activeTab==='scale'){scalePMin=16;scalePMax=16;scaleRatioMin=1.333;scaleRatioMax=1.4;scaleLH=1.4;selectedId.scale=7}
+  else if(activeTab==='padding'){paddingSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.padding));selectedId.padding=1;nextId.padding=7}
+  else if(activeTab==='margin'){marginSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.margin));selectedId.margin=1;nextId.margin=7}
+  else if(activeTab==='gap'){gapSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.gap));selectedId.gap=1;nextId.gap=7}
+  else if(activeTab==='radius'){radiusSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.radius));selectedId.radius=1;nextId.radius=7}
+  else if(activeTab==='shadow'){shadowSizes=JSON.parse(JSON.stringify(defaultSpacingSizes.shadow));selectedId.shadow=1;nextId.shadow=7}
+  saveState();render();
+});
+$('btn-clear').addEventListener('click',()=>{
+  if(activeTab==='scale')return;
+  if(!confirm('Clear all?'))return;
+  if(activeTab==='class'){classSizes=[];selectedId.class=null;nextId.class=1}
+  else if(activeTab==='tag'){tagSizes=[];selectedId.tag=null;nextId.tag=1}
+  else if(activeTab==='padding'){paddingSizes=[];selectedId.padding=null;nextId.padding=1}
+  else if(activeTab==='margin'){marginSizes=[];selectedId.margin=null;nextId.margin=1}
+  else if(activeTab==='gap'){gapSizes=[];selectedId.gap=null;nextId.gap=1}
+  else if(activeTab==='radius'){radiusSizes=[];selectedId.radius=null;nextId.radius=1}
+  else if(activeTab==='shadow'){shadowSizes=[];selectedId.shadow=null;nextId.shadow=1}
+  saveState();render();
+});
+$('btn-copy-clamp').addEventListener('click',()=>{const v=getClampValue();if(v)copyText(v)});
+$('btn-copy-clamp2').addEventListener('click',()=>{const v=getClampValue();if(v)copyText(v)});
+$('btn-copy-name').addEventListener('click',()=>{
+  const nameBadge=$('sel-name-badge');
+  if(nameBadge && nameBadge.textContent && !nameBadge.textContent.includes('select'))
+    copyText(nameBadge.textContent); // already clean (no --)
+});
+$('btn-copy-selected').addEventListener('click',()=>copyText(selectedCode.textContent));
+$('btn-copy-all').addEventListener('click',()=>copyText(allCode.textContent));
+$('btn-copy-all-right').addEventListener('click',()=>copyText(allCode.textContent));
+
+$('modal-cancel').addEventListener('click',closeModal);
+$('modal-save').addEventListener('click',saveModal);
+$('modal-close-x').addEventListener('click',closeModal);
+
+modalMin.addEventListener('input',()=>{
+  const sizes=getActiveSizes(),size=sizes.find(s=>s.id===editingId);if(!size)return;
+  const minPx=unitType==='px'?parseFloat(modalMin.value)||0:(parseFloat(modalMin.value)||0)*rootSize;
+  const maxPx=unitType==='px'?parseFloat(modalMax.value)||0:(parseFloat(modalMax.value)||0)*rootSize;
+  const nm=modalName.value||size.name;
+  const tmp={...size,min:minPx,max:maxPx,name:nm};
+  if(isSpacingTab()){
+    selectedCode.textContent=`/* CSS custom property */\n${generateCSSForSpacing(tmp)}\n\n/* Usage */\n.element { ${activeTab}: var(${cssVarName(nm)}); }`;
+  } else {
+    selectedCode.textContent=generateCSSForSize(tmp);
+  }
+});
+modalMax.addEventListener('input',()=>modalMin.dispatchEvent(new Event('input')));
+
+$('preview-font-url').addEventListener('input',e=>applyPreviewFont(e.target.value.trim(),false));
+$('preview-font-url-p').addEventListener('input',e=>applyPreviewFont(e.target.value.trim(),true));
+function applyPreviewFont(url,isP){
+  const prop=isP?'--preview-font-p':'--preview-font';
+  if(!url||!url.endsWith('.woff2')){document.documentElement.style.removeProperty(prop);return}
+  const name=isP?'FCCPreviewP':'FCCPreview';
+  const s=document.createElement('style');
+  s.textContent=`@font-face{font-family:'${name}';src:url('${url}') format('woff2');}`;
+  document.head.appendChild(s);
+  document.documentElement.style.setProperty(prop,`'${name}'`);
+}
+
+$('btn-export').addEventListener('click',()=>{
+  const data={
+    version:4,
+    project:projectData,
+    settings:{unitType,rootSize,minViewport,maxViewport,scalePMin,scalePMax,scaleRatioMin,scaleRatioMax,scaleLH,selectedId,activeTab},
+    classSizes,tagSizes,paddingSizes,marginSizes,gapSizes
+  };
+  const slug=(projectData.name||'clamp-config').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=`${slug}-clamp.json`;a.click();
+});
+$('btn-import').addEventListener('click',()=>$('import-file').click());
+$('import-file').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.settings){
+        const s=d.settings;
+        ['unitType','rootSize','minViewport','maxViewport','scalePMin','scalePMax','scaleRatioMin','scaleRatioMax','scaleLH','selectedId','activeTab'].forEach(k=>{
+          if(s[k]!==undefined)eval(`${k}=s['${k}']`);
+        });
+      }
+      if(d.classSizes)classSizes=d.classSizes;
+      if(d.tagSizes)tagSizes=d.tagSizes;
+      if(d.paddingSizes)paddingSizes=d.paddingSizes;
+      if(d.marginSizes)marginSizes=d.marginSizes;
+      if(d.gapSizes)gapSizes=d.gapSizes;
+      // Restore project details
+      if(d.project){ projectData={...projectData,...d.project}; saveProject(); renderProjectBar(); }
+      nextId.class=Math.max(...classSizes.map(s=>s.id),0)+1;
+      nextId.tag=Math.max(...tagSizes.map(s=>s.id),0)+1;
+      nextId.padding=Math.max(...paddingSizes.map(s=>s.id),0)+1;
+      nextId.margin=Math.max(...marginSizes.map(s=>s.id),0)+1;
+      nextId.gap=Math.max(...gapSizes.map(s=>s.id),0)+1;
+      saveState();render();
+    }catch{alert('Invalid JSON file.')}
+  };
+  reader.readAsText(file);e.target.value='';
+});
+
+// ═══════════════════════════════════════════════════════════
+// GLOBAL CONFIRM MODAL
+// ═══════════════════════════════════════════════════════════
+let gcmAction = null; // 'reset' or 'clear'
+
+const GCM_ITEMS_RESET = [
+  { icon:'🔤', label:'Font Size Classes',   detail:'Restored to 8 defaults (xxxlarge → xsmall)' },
+  { icon:'🏷️', label:'Font Size Tags',      detail:'Restored to h1–h6 + p defaults' },
+  { icon:'📐', label:'Scale Settings',      detail:'Ratio, base size reset to defaults' },
+  { icon:'📦', label:'Padding Tokens',      detail:'Restored to 6 defaults (pad-xs → pad-2xl)' },
+  { icon:'⬜', label:'Margin Tokens',       detail:'Restored to 6 defaults (mar-xs → mar-2xl)' },
+  { icon:'⬌', label:'Gap Tokens',          detail:'Restored to 6 defaults (gap-xs → gap-2xl)' },
+  { icon:'⚙️', label:'Global Settings',     detail:'Root 16px, Min VP 375px, Max VP 1280px' },
+  { icon:'🌐', label:'Project Details',     detail:'Name, URL, description, Tools, author, emoji' },
+];
+const GCM_ITEMS_CLEAR = [
+  { icon:'🔤', label:'Font Size Classes',   detail:'All class tokens deleted — list becomes empty' },
+  { icon:'🏷️', label:'Font Size Tags',      detail:'All tag tokens deleted — list becomes empty' },
+  { icon:'📦', label:'Padding Tokens',      detail:'All padding tokens deleted' },
+  { icon:'⬜', label:'Margin Tokens',       detail:'All margin tokens deleted' },
+  { icon:'⬌', label:'Gap Tokens',          detail:'All gap tokens deleted' },
+  { icon:'🌐', label:'Project Details',     detail:'Name reset to "My Project", all fields cleared' },
+];
+
+function openGlobalConfirm(type) {
+  gcmAction = type;
+  const isReset = type === 'reset';
+  const overlay = document.getElementById('global-confirm-overlay');
+
+  // Icon & title
+  document.getElementById('gcm-icon').textContent        = isReset ? '↺' : '⊗';
+  document.getElementById('gcm-icon').style.background   = isReset ? 'rgba(251,191,36,0.15)' : 'rgba(248,113,113,0.12)';
+  document.getElementById('gcm-icon').style.border       = isReset ? '1px solid rgba(251,191,36,0.3)' : '1px solid rgba(248,113,113,0.3)';
+  document.getElementById('gcm-title').textContent       = isReset ? 'Reset Everything to Defaults' : 'Clear Everything';
+  document.getElementById('gcm-subtitle').textContent    = isReset ? 'All data will be restored to factory defaults' : 'All data will be permanently deleted';
+
+  // Items list
+  const items = isReset ? GCM_ITEMS_RESET : GCM_ITEMS_CLEAR;
+  document.getElementById('gcm-items').innerHTML = items.map(it=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <span style="font-size:14px;flex-shrink:0;line-height:1.4;">${it.icon}</span>
+      <div>
+        <span style="font-size:12px;font-weight:600;color:var(--text);">${it.label}</span>
+        <span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">${it.detail}</span>
+      </div>
+    </div>`).join('');
+
+  // Warning
+  document.getElementById('gcm-warning-text').textContent = isReset
+    ? 'This will overwrite ALL your current tokens and settings. This cannot be undone.'
+    : 'This will permanently delete ALL tokens and clear all fields. This cannot be undone.';
+
+  // Confirm button
+  const btn = document.getElementById('gcm-confirm-btn');
+  btn.textContent = isReset ? 'Yes, Reset Everything' : 'Yes, Clear Everything';
+  btn.style.background   = isReset ? '#d97706' : 'var(--red)';
+  btn.style.color        = '#fff';
+  btn.onclick            = executeGlobalAction;
+
+  overlay.classList.add('open');
+}
+
+function closeGlobalConfirm() {
+  document.getElementById('global-confirm-overlay').classList.remove('open');
+  gcmAction = null;
+}
+
+function executeGlobalAction() {
+  if (gcmAction === 'reset') {
+    // Reset all token arrays
+    classSizes    = JSON.parse(JSON.stringify(defaultClassSizes));
+    tagSizes      = JSON.parse(JSON.stringify(defaultTagSizes));
+    paddingSizes  = JSON.parse(JSON.stringify(defaultSpacingSizes.padding));
+    marginSizes   = JSON.parse(JSON.stringify(defaultSpacingSizes.margin));
+    gapSizes      = JSON.parse(JSON.stringify(defaultSpacingSizes.gap));
+    // Reset settings
+    unitType='px'; rootSize=16; minViewport=375; maxViewport=1280;
+    scalePMin=16; scalePMax=16; scaleRatioMin=1.333; scaleRatioMax=1.4; scaleLH=1.4;
+    selectedId={class:6,tag:1,scale:7,padding:1,margin:1,gap:1};
+    nextId={class:9,tag:8,scale:8,padding:7,margin:7,gap:7};
+    activeTab='class';
+    // Reset project
+    projectData={name:'My Project',url:'',desc:'',Tools:'',author:'',emoji:'🌐'};
+  } else {
+    // Clear everything
+    classSizes=[]; tagSizes=[]; paddingSizes=[]; marginSizes=[]; gapSizes=[];
+    selectedId={class:null,tag:null,scale:null,padding:null,margin:null,gap:null};
+    nextId={class:1,tag:1,scale:1,padding:1,margin:1,gap:1};
+    activeTab='class';
+    // Clear project
+    projectData={name:'My Project',url:'',desc:'',Tools:'',author:'',emoji:'🌐'};
+  }
+  // Persist & re-render
+  saveProject();
+  renderProjectBar();
+  saveState();
+  render();
+  closeGlobalConfirm();
+}
+
+// Wire up header buttons
+$('btn-global-reset').addEventListener('click', () => openGlobalConfirm('reset'));
+$('btn-global-clear').addEventListener('click', () => openGlobalConfirm('clear'));
+let projectData = {
+  name: 'My Project', url: '', desc: '', Tools: '', author: '', emoji: '🌐'
+};
+
+function loadProject(){
+  try{
+    const p=localStorage.getItem('fcc_project');
+    if(p) projectData=JSON.parse(p);
+  }catch(e){}
+}
+function saveProject(){
+  try{ localStorage.setItem('fcc_project',JSON.stringify(projectData)); }catch(e){}
+}
+
+function renderProjectBar(){
+  const p=projectData;
+  document.getElementById('proj-favicon-emoji').textContent = p.emoji||'🌐';
+  document.getElementById('proj-modal-favicon-preview').textContent = p.emoji||'🌐';
+  document.getElementById('proj-name').textContent = p.name||'My Project';
+  const urlEl=document.getElementById('proj-url');
+  if(p.url){
+    // Strip https:// for display
+    urlEl.textContent='· '+p.url.replace(/^https?:\/\//,'').replace(/\/$/,'');
+    urlEl.style.display='';
+  } else {
+    urlEl.style.display='none';
+  }
+  const descEl=document.getElementById('proj-desc');
+  const parts=[];
+  if(p.desc)  parts.push(p.desc);
+  if(p.Tools) parts.push('Tools: '+p.Tools);
+  if(p.author)parts.push('By '+p.author);
+  descEl.textContent = parts.length ? parts.join(' · ') : 'Click to add project details…';
+  descEl.style.color = parts.length ? 'var(--text2)' : 'var(--text3)';
+}
+
+function openProjectModal(){
+  const p=projectData;
+  document.getElementById('proj-input-name').value  = p.name||'';
+  document.getElementById('proj-input-url').value   = p.url||'';
+  document.getElementById('proj-input-desc').value  = p.desc||'';
+  document.getElementById('proj-input-Tools').value = p.Tools||'';
+  document.getElementById('proj-input-author').value= p.author||'';
+  document.getElementById('proj-input-emoji').value = p.emoji||'';
+  document.getElementById('project-modal-overlay').classList.add('open');
+  document.getElementById('proj-input-name').focus();
+}
+function closeProjectModal(){
+  document.getElementById('project-modal-overlay').classList.remove('open');
+}
+function saveProjectModal(){
+  projectData.name   = document.getElementById('proj-input-name').value.trim() || 'My Project';
+  projectData.url    = document.getElementById('proj-input-url').value.trim();
+  projectData.desc   = document.getElementById('proj-input-desc').value.trim();
+  projectData.Tools  = document.getElementById('proj-input-Tools').value.trim();
+  projectData.author = document.getElementById('proj-input-author').value.trim();
+  const em           = document.getElementById('proj-input-emoji').value.trim();
+  projectData.emoji  = em || '🌐';
+  saveProject();
+  renderProjectBar();
+  closeProjectModal();
+}
+
+// Live emoji preview in modal
+document.getElementById('proj-input-emoji').addEventListener('input', e=>{
+  const v=e.target.value.trim();
+  document.getElementById('proj-modal-favicon-preview').textContent = v||'🌐';
+});
+
+// ─── INIT ───────────────────────────────────────────────────────────
+loadProject();
+renderProjectBar();
+loadState();render();
+</script>
+</body>
+</html>
